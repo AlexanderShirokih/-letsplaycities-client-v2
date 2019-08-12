@@ -171,5 +171,7 @@ sealed class LPSMessage {
 
     object LPSTimeoutMessage : LPSMessage()
 
+    object LPSDisconnectMessage : LPSMessage()
+
     object LPSUnknownMessage : LPSMessage()
 }

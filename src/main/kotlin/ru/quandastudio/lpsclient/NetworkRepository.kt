@@ -11,6 +11,7 @@ import ru.quandastudio.lpsclient.core.NetworkClient
 import ru.quandastudio.lpsclient.model.BlackListItem
 import ru.quandastudio.lpsclient.model.FriendInfo
 import ru.quandastudio.lpsclient.model.PlayerData
+import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 class NetworkRepository(private val mNetworkClient: NetworkClient, private val token: Single<String>) {
@@ -20,13 +21,18 @@ class NetworkRepository(private val mNetworkClient: NetworkClient, private val t
     private val inputMessage: Observable<LPSMessage> by lazy {
         Observable.create<LPSMessage> {
             while (!it.isDisposed && mNetworkClient.isConnected()) {
-                val msg = mNetworkClient.readMessage()
-                it.onNext(msg)
+                it.onNext(
+                    try {
+                        mNetworkClient.readMessage()
+                    } catch (e: IOException) {
+                        LPSMessage.LPSDisconnectMessage
+                    }
+                )
             }
             it.onComplete()
         }
             .subscribeOn(Schedulers.io())
-            .onErrorReturn { LPSMessage.LPSUnknownMessage }
+            .onErrorReturn { LPSMessage.LPSDisconnectMessage }
             .publish().refCount(1, TimeUnit.SECONDS)
     }
 
@@ -53,6 +59,12 @@ class NetworkRepository(private val mNetworkClient: NetworkClient, private val t
     val kick: Maybe<LPSMessage.LPSBannedMessage> =
         inputMessage.filter { it is LPSMessage.LPSBannedMessage }.cast(LPSMessage.LPSBannedMessage::class.java)
             .firstElement()
+
+    val disconnect: Maybe<LPSMessage.LPSDisconnectMessage> by lazy {
+        inputMessage.filter { it is LPSMessage.LPSDisconnectMessage }
+            .cast(LPSMessage.LPSDisconnectMessage::class.java)
+            .firstElement()
+    }
 
     private fun networkClient(): Single<NetworkClient> =
         Single.just(mNetworkClient)
