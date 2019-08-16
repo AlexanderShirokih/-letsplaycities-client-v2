@@ -2,6 +2,7 @@ package ru.quandastudio.lpsclient.core
 
 import ru.quandastudio.lpsclient.LPSException
 import ru.quandastudio.lpsclient.model.*
+import java.nio.Buffer
 import java.nio.ByteBuffer
 import kotlin.collections.ArrayList
 
@@ -127,7 +128,7 @@ sealed class LPSMessage {
                 list.add(BlackListItem(names[i], userIds.int))
             }
 
-            userIds.clear()
+            (userIds as Buffer).clear()
         }
     }
 
@@ -165,7 +166,7 @@ sealed class LPSMessage {
                 list.add(FriendInfo(userIds.int, names[i], accept[i] > 0))
             }
 
-            userIds.clear()
+            (userIds as Buffer).clear()
         }
     }
 
