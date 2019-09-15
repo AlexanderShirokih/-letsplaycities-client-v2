@@ -6,6 +6,7 @@ import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
+import io.reactivex.subjects.ReplaySubject
 import ru.quandastudio.lpsclient.core.LPSMessage
 import ru.quandastudio.lpsclient.core.NetworkClient
 import ru.quandastudio.lpsclient.model.BlackListItem
@@ -18,19 +19,21 @@ class NetworkRepository(private val mNetworkClient: NetworkClient, private val t
 
     private val disposable = CompositeDisposable()
 
-    private val inputMessage: Observable<LPSMessage> by lazy {
-        Observable.create<LPSMessage> {
-            while (!it.isDisposed && mNetworkClient.isConnected()) {
-                it.onNext(
-                    try {
-                        mNetworkClient.readMessage()
-                    } catch (e: IOException) {
-                        LPSMessage.LPSDisconnectMessage
-                    }
-                )
-            }
-            it.onComplete()
+    private val inputMessageR = ReplaySubject.create<LPSMessage> {
+        while (!it.isDisposed && mNetworkClient.isConnected()) {
+            it.onNext(
+                try {
+                    mNetworkClient.readMessage()
+                } catch (e: IOException) {
+                    LPSMessage.LPSDisconnectMessage
+                }
+            )
         }
+        it.onComplete()
+    }
+
+    private val inputMessage: Observable<LPSMessage> by lazy {
+        inputMessageR
             .subscribeOn(Schedulers.io())
             .onErrorReturn { LPSMessage.LPSDisconnectMessage }
             .publish().refCount(1, TimeUnit.SECONDS)
@@ -92,12 +95,11 @@ class NetworkRepository(private val mNetworkClient: NetworkClient, private val t
                 if (it.banned) Observable.error(BannedPlayerException()) else Observable.just(it)
             }
             .retryWhen { errors ->
-                errors.flatMap { error ->
-                    // Retry with random delay to avoid ban deadlocks
-                    if (error is BannedPlayerException)
-                        Observable.timer((2L..6L).random(), TimeUnit.SECONDS)
+                errors.flatMap { err ->
+                    if (err is BannedPlayerException)
+                        Observable.just(0L).delay((0L..1L).random(), TimeUnit.SECONDS)
                     else
-                        Observable.error(error)
+                        Observable.error(err)
                 }
             }
             .map { it.opponentPlayer to it.youStarter }

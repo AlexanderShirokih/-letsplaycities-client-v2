@@ -28,7 +28,7 @@ internal class NetworkRepositoryTest {
 
     @Test
     fun testPlayGame() {
-        val networkClient = NetworkClient("localhost")
+        val networkClient = NetworkClient(false,"localhost")
         val repository = NetworkRepository(networkClient, Single.just(""))
         val playerData = createPlayerData()
 

@@ -11,6 +11,7 @@ sealed class LPSMessage {
     companion object {
 
         fun from(msgReader: LPSMessageReader): LPSMessage {
+            msgReader.toString()
             return when (val action = msgReader.getMasterTag()) {
                 LPSv3Tags.ACTION_JOIN -> LPSPlayMessage(msgReader)
                 LPSv3Tags.ACTION_SYNC -> LPSSyncMessage(msgReader, action)

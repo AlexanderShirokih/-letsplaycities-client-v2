@@ -22,6 +22,8 @@ class LPSMessageReader(private val dis: DataInputStream) {
         }
     }
 
+    fun isEmpty() = numTags == 0
+
     private fun readTag(): LPSTag.LPSBinTag {
         val tag = dis.readUnsignedByte()
         if (tag == 0)
@@ -41,7 +43,7 @@ class LPSMessageReader(private val dis: DataInputStream) {
     override fun toString(): String {
         val builder = StringBuilder()
         builder.append("LPSMessageReader [tags=")
-        builder.append(Arrays.toString(tags))
+        builder.append(tags.contentToString())
         builder.append(", numTags=")
         builder.append(numTags)
         builder.append("]")
@@ -118,7 +120,7 @@ class LPSMessageReader(private val dis: DataInputStream) {
     }
 
     fun optBytes(tag: Byte): ByteArray? {
-        return if(hasTag(tag)) readBytes(tag) else null
+        return if (hasTag(tag)) readBytes(tag) else null
     }
 
     fun <T : Enum<T>> optEnum(type: Class<T>, tag: Byte): T? {
