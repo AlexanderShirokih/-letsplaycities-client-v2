@@ -91,7 +91,15 @@ class NetworkRepository(private val mNetworkClient: NetworkClient, private val t
             .flatMap {
                 if (it.banned) Observable.error(BannedPlayerException()) else Observable.just(it)
             }
-            .retry { t: Throwable -> t is BannedPlayerException }
+            .retryWhen { errors ->
+                errors.flatMap { error ->
+                    // Retry with random delay to avoid ban deadlocks
+                    if (error is BannedPlayerException)
+                        Observable.timer((2L..6L).random(), TimeUnit.SECONDS)
+                    else
+                        Observable.error(error)
+                }
+            }
             .map { it.opponentPlayer to it.youStarter }
             .firstElement()
     }
