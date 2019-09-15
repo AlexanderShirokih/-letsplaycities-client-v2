@@ -36,6 +36,8 @@ class NetworkRepository(private val mNetworkClient: NetworkClient, private val t
             .publish().refCount(1, TimeUnit.SECONDS)
     }
 
+    val isLocal = mNetworkClient.isLocal
+
     val words: Observable<LPSMessage.LPSWordMessage> =
         inputMessage.filter { it is LPSMessage.LPSWordMessage }.cast(LPSMessage.LPSWordMessage::class.java)
 

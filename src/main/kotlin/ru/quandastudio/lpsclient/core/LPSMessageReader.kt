@@ -10,11 +10,11 @@ class LPSMessageReader(private val dis: DataInputStream) {
     private val tags: Array<LPSTag.LPSBinTag>
 
     private val numTags: Int
-    private var tagCntr: Int = 0
+    private var tagCounter: Int = 0
 
     init {
-        val magic = dis.readChar()
-        if (magic.toInt() != LPSv3Tags.LPS_SERVER_VALID) {
+        val magic = dis.readChar().toInt()
+        if (magic != LPSv3Tags.LPS_SERVER_VALID && magic != LPSv3Tags.LPS_CLIENT_VALID) {
             throw LPSException("Received an invalid LPS Message!")
         } else {
             numTags = dis.readUnsignedByte()
@@ -49,7 +49,7 @@ class LPSMessageReader(private val dis: DataInputStream) {
     }
 
     fun nextTag(): Byte {
-        return if (tagCntr == numTags) -1 else tags[tagCntr++].tag
+        return if (tagCounter == numTags) -1 else tags[tagCounter++].tag
     }
 
     fun getMasterTag(): Byte {
@@ -115,6 +115,10 @@ class LPSMessageReader(private val dis: DataInputStream) {
 
     fun optString(tag: Byte): String? {
         return if (hasTag(tag)) readString(tag) else null
+    }
+
+    fun optBytes(tag: Byte): ByteArray? {
+        return if(hasTag(tag)) readBytes(tag) else null
     }
 
     fun <T : Enum<T>> optEnum(type: Class<T>, tag: Byte): T? {

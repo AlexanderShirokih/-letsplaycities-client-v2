@@ -11,14 +11,14 @@ class LPSMessageWriter(private val dos: DataOutputStream) {
     private val tags = ArrayList<LPSTag>()
 
     @Throws(IOException::class)
-    private fun writeHead() {
-        dos.writeChar(LPSv3Tags.LPS_CLIENT_VALID)
+    private fun writeHead(asServer: Boolean) {
+        dos.writeChar(if (asServer) LPSv3Tags.LPS_SERVER_VALID else LPSv3Tags.LPS_CLIENT_VALID)
         dos.writeByte(tags.size)
     }
 
     @Throws(IOException::class)
-    fun build() {
-        writeHead()
+    fun build(asServer: Boolean) {
+        writeHead(asServer)
 
         for (t in tags)
             t.write(dos)
@@ -27,8 +27,8 @@ class LPSMessageWriter(private val dos: DataOutputStream) {
     }
 
     @Throws(IOException::class)
-    fun buildAndFlush() {
-        build()
+    fun buildAndFlush(asServer: Boolean = false) {
+        build(asServer)
         dos.flush()
     }
 
@@ -73,7 +73,7 @@ class LPSMessageWriter(private val dos: DataOutputStream) {
     }
 
     @Throws(IOException::class)
-    internal fun close() = dos.close()
+    fun close() = dos.close()
 
     override fun toString(): String {
         val sb = StringBuilder()

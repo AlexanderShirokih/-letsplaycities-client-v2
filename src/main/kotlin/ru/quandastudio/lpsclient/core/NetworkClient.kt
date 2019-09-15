@@ -6,11 +6,7 @@ import ru.quandastudio.lpsclient.model.AuthData
 import ru.quandastudio.lpsclient.model.PlayerData
 import java.io.*
 
-class NetworkClient constructor(private val host: String) {
-
-    companion object {
-        private const val PORT = 62964
-    }
+class NetworkClient constructor(val isLocal: Boolean, private val host: String, private val port: Int = 62964) {
 
     private var mConnection: Connection? = null
 
@@ -21,7 +17,7 @@ class NetworkClient constructor(private val host: String) {
 
     @Throws(IOException::class)
     fun connect() {
-        mConnection = Connection(host, PORT)
+        mConnection = Connection(host, port)
     }
 
     private fun requireConnection(): Connection {

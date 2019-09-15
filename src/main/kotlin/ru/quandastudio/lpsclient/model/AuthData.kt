@@ -2,7 +2,7 @@ package ru.quandastudio.lpsclient.model
 
 import ru.quandastudio.lpsclient.model.util.Utils
 
-class AuthData(
+data class AuthData(
     var login: String,
     var snUID: String,
     var snType: AuthType,
