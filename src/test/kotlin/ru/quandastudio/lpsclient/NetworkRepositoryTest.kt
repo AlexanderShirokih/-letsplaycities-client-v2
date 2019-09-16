@@ -10,17 +10,18 @@ internal class NetworkRepositoryTest {
 
     @Test
     fun testPlayGame() {
-        val networkClient = NetworkClient(false,"localhost")
+        val networkClient = NetworkClient(false, "localhost")
         val repository = NetworkRepository(networkClient, Single.just("test"))
         val playerData = createPlayerData()
 
         val it = repository.login(playerData)
             .doOnSubscribe { println("Connecting to server...") }
-            .doOnSuccess { println("Waiting for opponent...") }
+            .doOnNext { println("LoggedIn: ${it.authData}") }
+            .doOnNext { println("Waiting for opponent...") }
             .observeOn(Schedulers.io())
-            .flatMapMaybe { repository.play(false, null) }
+            .flatMap { repository.play(false, null) }
             .observeOn(Schedulers.single())
-            .blockingGet()
+            .blockingFirst()
         println("Play as=${playerData.authData.login}, with=${it.first.authData.login}, starter=${it.second}")
     }
 

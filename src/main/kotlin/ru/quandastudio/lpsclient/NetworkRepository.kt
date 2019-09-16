@@ -6,99 +6,74 @@ import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
-import io.reactivex.subjects.ReplaySubject
 import ru.quandastudio.lpsclient.core.LPSMessage
 import ru.quandastudio.lpsclient.core.NetworkClient
 import ru.quandastudio.lpsclient.model.BlackListItem
 import ru.quandastudio.lpsclient.model.FriendInfo
 import ru.quandastudio.lpsclient.model.PlayerData
-import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 class NetworkRepository(private val mNetworkClient: NetworkClient, private val token: Single<String>) {
 
     private val disposable = CompositeDisposable()
 
-    private val inputMessageR = ReplaySubject.create<LPSMessage> {
-        println("::Create")
-        while (!it.isDisposed && mNetworkClient.isConnected()) {
-            println("::Wait for msg")
-            it.onNext(
-                try {
-                    mNetworkClient.readMessage()
-                } catch (e: IOException) {
-                    LPSMessage.LPSLeaveMessage(false)
-                }
-            )
-        }
-        println("::Completion")
-        it.onComplete()
-    }
+//    private val inputMessage: Observable<LPSMessage> by lazy {
+//        inputMessageR
+//            .subscribeOn(Schedulers.io())
+//            .onErrorReturn { LPSMessage.LPSLeaveMessage(false) }
+//            .publish().refCount(1, TimeUnit.SECONDS)
+//    }
 
-    private val inputMessage: Observable<LPSMessage> by lazy {
-        inputMessageR
-            .subscribeOn(Schedulers.io())
-            .onErrorReturn { LPSMessage.LPSLeaveMessage(false) }
-            .publish().refCount(1, TimeUnit.SECONDS)
-    }
+    private fun inputMessage(): Observable<LPSMessage> = mNetworkClient.getMessages()
 
     val isLocal = mNetworkClient.isLocal
 
-    val words: Observable<LPSMessage.LPSWordMessage> =
-        inputMessage.filter { it is LPSMessage.LPSWordMessage }.cast(LPSMessage.LPSWordMessage::class.java)
+    fun getWords(): Observable<LPSMessage.LPSWordMessage> =
+        inputMessage().filter { it is LPSMessage.LPSWordMessage }.cast(LPSMessage.LPSWordMessage::class.java)
 
-    val messages: Observable<LPSMessage.LPSMsgMessage> =
-        inputMessage.filter { it is LPSMessage.LPSMsgMessage }.cast(LPSMessage.LPSMsgMessage::class.java)
+    fun getMessages(): Observable<LPSMessage.LPSMsgMessage> =
+        inputMessage().filter { it is LPSMessage.LPSMsgMessage }.cast(LPSMessage.LPSMsgMessage::class.java)
 
-    val leave: Maybe<LPSMessage.LPSLeaveMessage> =
-        inputMessage.filter { it is LPSMessage.LPSLeaveMessage }.cast(LPSMessage.LPSLeaveMessage::class.java)
+    fun getLeave(): Maybe<LPSMessage.LPSLeaveMessage> =
+        inputMessage().filter { it is LPSMessage.LPSLeaveMessage }.cast(LPSMessage.LPSLeaveMessage::class.java)
             .firstElement()
 
-    val timeout: Maybe<LPSMessage> =
-        inputMessage.filter { it is LPSMessage.LPSTimeoutMessage }.firstElement()
+    fun getTimeout(): Maybe<LPSMessage> =
+        inputMessage().filter { it is LPSMessage.LPSTimeoutMessage }.firstElement()
 
-    val friendsRequest: Observable<LPSMessage.FriendRequest> =
-        inputMessage.filter { it is LPSMessage.LPSFriendRequest }.cast(LPSMessage.LPSFriendRequest::class.java)
+    fun getFriendsRequest(): Observable<LPSMessage.FriendRequest> =
+        inputMessage().filter { it is LPSMessage.LPSFriendRequest }.cast(LPSMessage.LPSFriendRequest::class.java)
             .map { it.requestResult }
 
-    val friendsModeRequest: Observable<LPSMessage.LPSFriendModeRequest> =
-        inputMessage.filter { it is LPSMessage.LPSFriendModeRequest }.cast(LPSMessage.LPSFriendModeRequest::class.java)
+    fun getFriendsModeRequest(): Observable<LPSMessage.LPSFriendModeRequest> =
+        inputMessage().filter { it is LPSMessage.LPSFriendModeRequest }.cast(LPSMessage.LPSFriendModeRequest::class.java)
 
-    val kick: Maybe<LPSMessage.LPSBannedMessage> =
-        inputMessage.filter { it is LPSMessage.LPSBannedMessage }.cast(LPSMessage.LPSBannedMessage::class.java)
+    fun getKick(): Maybe<LPSMessage.LPSBannedMessage> =
+        inputMessage().filter { it is LPSMessage.LPSBannedMessage }.cast(LPSMessage.LPSBannedMessage::class.java)
             .firstElement()
 
-    val disconnect: Maybe<LPSMessage.LPSLeaveMessage> by lazy {
-        inputMessage.filter { it is LPSMessage.LPSLeaveMessage && !it.leaved }
+    fun getDisconnect(): Maybe<LPSMessage.LPSLeaveMessage> =
+        inputMessage().filter { it is LPSMessage.LPSLeaveMessage && !it.leaved }
             .cast(LPSMessage.LPSLeaveMessage::class.java)
             .firstElement()
-    }
 
-    private fun networkClient(): Single<NetworkClient> =
-        Single.just(mNetworkClient)
+    private fun networkClient(): Observable<NetworkClient> =
+        Observable.just(mNetworkClient)
             .subscribeOn(Schedulers.io())
-            .doOnSuccess { checkConnection() }
 
-    fun login(userData: PlayerData): Single<NetworkClient.AuthResult> {
+    fun login(userData: PlayerData): Observable<NetworkClient.AuthResult> {
         return networkClient()
-            .map { it.login(userData, token.blockingGet()) }
+            .flatMap { it.connect() }
+            .flatMapMaybe { it.login(userData, token.blockingGet()) }
     }
 
     class BannedPlayerException : Exception()
 
-    private fun connectAndPlay(isWaiting: Boolean, friendId: Int?): Single<NetworkClient> {
+    fun play(isWaiting: Boolean, friendId: Int?): Observable<Pair<PlayerData, Boolean>> {
         return networkClient()
-            .doOnSuccess {
-                println("We have NC!")
-            }
-            .doOnSuccess { client -> client.play(isWaiting, friendId) }
-    }
-
-    fun play(isWaiting: Boolean, friendId: Int?): Maybe<Pair<PlayerData, Boolean>> {
-        return connectAndPlay(isWaiting, friendId)
-            .toObservable()
+            .doOnNext { client -> client.play(isWaiting, friendId) }
             .flatMap {
-                inputMessage.filter { msg: LPSMessage -> msg is LPSMessage.LPSPlayMessage }
+                inputMessage().filter { msg: LPSMessage -> msg is LPSMessage.LPSPlayMessage }
                     .cast(LPSMessage.LPSPlayMessage::class.java)
             }
             .doOnNext {
@@ -116,17 +91,15 @@ class NetworkRepository(private val mNetworkClient: NetworkClient, private val t
                 }
             }
             .map { it.getPlayerData() to it.youStarter }
-            .firstElement()
     }
 
     fun connectToFriend(): Maybe<Pair<PlayerData, Boolean>> {
         return networkClient()
-            .toObservable()
             .takeUntil<LPSMessage.LPSFriendModeRequest> {
-                inputMessage.filter { it is LPSMessage.LPSFriendModeRequest }
+                inputMessage().filter { it is LPSMessage.LPSFriendModeRequest }
             }
             .flatMap {
-                inputMessage.filter { it is LPSMessage.LPSPlayMessage }
+                inputMessage().filter { it is LPSMessage.LPSPlayMessage }
                     .cast(LPSMessage.LPSPlayMessage::class.java)
             }
             .map { it.getPlayerData() to it.youStarter }
@@ -135,10 +108,9 @@ class NetworkRepository(private val mNetworkClient: NetworkClient, private val t
 
     fun getBlackList(): Single<List<BlackListItem>> {
         return networkClient()
-            .doOnSuccess { t -> t.requestBlackList() }
-            .toObservable()
+            .doOnNext { t -> t.requestBlackList() }
             .flatMap {
-                inputMessage.filter { it is LPSMessage.LPSBannedListMessage }
+                inputMessage().filter { it is LPSMessage.LPSBannedListMessage }
                     .cast(LPSMessage.LPSBannedListMessage::class.java)
             }
             .firstOrError()
@@ -147,10 +119,9 @@ class NetworkRepository(private val mNetworkClient: NetworkClient, private val t
 
     fun getFriendsList(): Single<ArrayList<FriendInfo>> {
         return networkClient()
-            .doOnSuccess { t -> t.requestFriendsList() }
-            .toObservable()
+            .doOnNext { t -> t.requestFriendsList() }
             .flatMap {
-                inputMessage.filter { it is LPSMessage.LPSFriendsList }.cast(LPSMessage.LPSFriendsList::class.java)
+                inputMessage().filter { it is LPSMessage.LPSFriendsList }.cast(LPSMessage.LPSFriendsList::class.java)
             }
             .firstOrError()
             .map { it.list }
@@ -158,14 +129,14 @@ class NetworkRepository(private val mNetworkClient: NetworkClient, private val t
 
     fun deleteFriend(userId: Int): Completable {
         return networkClient()
-            .doOnSuccess { mNetworkClient.deleteFriend(userId) }
-            .ignoreElement()
+            .doOnNext { mNetworkClient.deleteFriend(userId) }
+            .ignoreElements()
     }
 
     fun removeFromBanList(userId: Int): Completable {
         return networkClient()
-            .doOnSuccess { mNetworkClient.removeFromBanList(userId) }
-            .ignoreElement()
+            .doOnNext { mNetworkClient.removeFromBanList(userId) }
+            .ignoreElements()
     }
 
     fun disconnect() {
@@ -174,18 +145,11 @@ class NetworkRepository(private val mNetworkClient: NetworkClient, private val t
             .subscribe()
     }
 
-    private fun checkConnection() {
-        if (!mNetworkClient.isConnected()) {
-            mNetworkClient.disconnect()
-            mNetworkClient.connect()
-        }
-    }
-
     fun sendFriendRequestResult(result: Boolean, userId: Int): Completable {
         return networkClient()
             .subscribeOn(Schedulers.io())
-            .doOnSuccess { it.sendFriendRequestResult(result, userId) }
-            .ignoreElement()
+            .doOnNext { it.sendFriendRequestResult(result, userId) }
+            .ignoreElements()
     }
 
     fun sendWord(city: String) {

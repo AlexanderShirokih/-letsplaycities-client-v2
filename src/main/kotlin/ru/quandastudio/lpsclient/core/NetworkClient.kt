@@ -1,162 +1,160 @@
 package ru.quandastudio.lpsclient.core
 
+import io.reactivex.Maybe
+import io.reactivex.Observable
+import io.reactivex.schedulers.Schedulers
 import ru.quandastudio.lpsclient.AuthorizationException
 import ru.quandastudio.lpsclient.LPSException
 import ru.quandastudio.lpsclient.model.AuthData
 import ru.quandastudio.lpsclient.model.PlayerData
-import java.io.*
-import java.util.*
+import ru.quandastudio.lpsclient.socket.SocketObservable
+import java.util.Base64
+import java.util.concurrent.TimeUnit
 
-class NetworkClient constructor(val isLocal: Boolean, private val host: String, private val port: Int = 62964) {
+class NetworkClient constructor(val isLocal: Boolean, host: String, port: Int = 62964) {
 
-    private var mConnection: Connection? = null
+    private val json = JsonMessage()
+    private val mSocket = SocketObservable(host, port)
+    private val mSharedSocket = mSocket
+        .doOnError {
+            println("Error catched: $it")
+        }
+        .subscribeOn(Schedulers.io())
+        .publish().refCount(1, TimeUnit.SECONDS)
 
     class AuthResult(
         val authData: AuthData,
         val newerBuild: Int
     )
 
-    @Throws(IOException::class)
-    fun connect() {
-        mConnection = Connection(host, port)
+    fun connect(): Observable<NetworkClient> {
+        return mSharedSocket
+            .filter { it.state == SocketObservable.State.CONNECTED }
+            .map { this@NetworkClient }
     }
 
-    private fun requireConnection(): Connection {
-        if (mConnection == null) {
-            throw LPSException("requireConnection() called, but mConnection is null")
+    fun disconnect() = mSocket.dispose()
+
+    private fun requireConnection(): SocketObservable {
+        if (!mSocket.isConnected()) {
+            throw LPSException("requireConnection() called, socket is not connected")
         }
-        return mConnection!!
+        return mSocket
     }
 
-    fun disconnect() {
-        mConnection?.disconnect()
-        mConnection = null
-    }
+    fun getMessages(): Observable<LPSMessage> = mSharedSocket
+        .filter { it.state != SocketObservable.State.CONNECTED }
+        .map {
+            if (it.state == SocketObservable.State.DISCONNECTED)
+                LPSMessage.LPSLeaveMessage(false)
+            else
+                json.read(it.data)
+        }
+
+    private fun sendMessage(message: LPSClientMessage) = requireConnection().sendData(json.write(message))
 
     private fun ByteArray.toBase64(): String {
         return Base64.getEncoder().encodeToString(this)
     }
 
-    @Throws(AuthorizationException::class, LPSException::class)
-    fun login(userData: PlayerData, fbToken: String): AuthResult {
+    fun login(userData: PlayerData, fbToken: String): Maybe<AuthResult> {
         val ad = userData.authData
-
-        val login = LPSClientMessage.LPSLogIn(
-            userData,
-            fbToken,
-            if (ad.userID > 0) ad.userID else null,
-            ad.accessHash,
-            userData.avatar?.toBase64()
-        )
-
-        requireConnection()
-            .writer()
-            .send(login)
-
-        val loginMsg = requireConnection().reader().read()
-
-        if (loginMsg is LPSMessage.LPSBanned)
-            throw AuthorizationException(loginMsg.banReason, loginMsg.connError)
-
-        if (loginMsg is LPSMessage.LPSLoggedIn) {
-            ad.userID = loginMsg.userId
-            ad.accessHash = loginMsg.accHash
-            return AuthResult(ad, loginMsg.newerBuild)
-        }
-
-        throw LPSException("Waiting for LPSLoggedIn message, but $loginMsg received")
+        return Observable
+            .fromCallable {
+                LPSClientMessage.LPSLogIn(
+                    userData,
+                    fbToken,
+                    if (ad.userID > 0) ad.userID else null,
+                    ad.accessHash,
+                    userData.avatar?.toBase64()
+                )
+            }
+            .doOnNext(::sendMessage)
+            .flatMap { getMessages() }
+            .firstElement()
+            .map {
+                when (it) {
+                    is LPSMessage.LPSBanned ->
+                        throw AuthorizationException(it.banReason, it.connError)
+                    is LPSMessage.LPSLoggedIn -> {
+                        ad.userID = it.userId
+                        ad.accessHash = it.accHash
+                        AuthResult(ad, it.newerBuild)
+                    }
+                    else -> throw LPSException("Waiting for LPSLoggedIn message, but $it received")
+                }
+            }
     }
 
-    @Throws(IOException::class)
     fun play(isWaiting: Boolean, userId: Int?) {
-        val play = LPSClientMessage.LPSPlay(
-            mode = if (isWaiting) LPSClientMessage.PlayMode.FRIEND else LPSClientMessage.PlayMode.RANDOM_PAIR,
-            oppUid = if (isWaiting) userId!! else null
+        sendMessage(
+            LPSClientMessage.LPSPlay(
+                mode = if (isWaiting) LPSClientMessage.PlayMode.FRIEND else LPSClientMessage.PlayMode.RANDOM_PAIR,
+                oppUid = if (isWaiting) userId!! else null
+            )
         )
-        requireConnection().writer().send(play)
     }
 
-    fun readMessage(): LPSMessage = requireConnection().reader().read()
 
     fun requestBlackList() {
-        requireConnection()
-            .writer()
-            .send(LPSClientMessage.LPSBanList(LPSClientMessage.RequestType.QUERY_LIST))
+        sendMessage(LPSClientMessage.LPSBanList(LPSClientMessage.RequestType.QUERY_LIST))
     }
 
     fun requestFriendsList() {
-        requireConnection()
-            .writer()
-            .send(LPSClientMessage.LPSFriendList)
+        sendMessage(LPSClientMessage.LPSFriendList)
     }
 
     fun deleteFriend(userId: Int) {
-        requireConnection()
-            .writer()
-            .send(
-                LPSClientMessage.LPSFriendAction(
-                    type = LPSClientMessage.RequestType.DELETE,
-                    oppUid = userId
-                )
+        sendMessage(
+            LPSClientMessage.LPSFriendAction(
+                type = LPSClientMessage.RequestType.DELETE,
+                oppUid = userId
             )
+        )
     }
 
     fun removeFromBanList(userId: Int) {
-        requireConnection()
-            .writer()
-            .send(
-                LPSClientMessage.LPSBanList(
-                    type = LPSClientMessage.RequestType.DELETE,
-                    friendUid = userId
-                )
+        sendMessage(
+            LPSClientMessage.LPSBanList(
+                type = LPSClientMessage.RequestType.DELETE,
+                friendUid = userId
             )
+        )
     }
 
     fun banUser(userId: Int) {
-        requireConnection()
-            .writer()
-            .send(LPSClientMessage.LPSBan(targetId = userId))
+        sendMessage(LPSClientMessage.LPSBan(targetId = userId))
     }
 
-    fun isConnected() = mConnection != null && mConnection!!.isConnected()
+    fun isConnected() = mSocket.isConnected()
 
     fun sendWord(word: String) {
-        requireConnection()
-            .writer()
-            .send(LPSClientMessage.LPSWord(word))
+        sendMessage(LPSClientMessage.LPSWord(word))
     }
 
     fun sendMessage(message: String) {
-        requireConnection()
-            .writer()
-            .send(LPSClientMessage.LPSMsg(message))
+        sendMessage(LPSClientMessage.LPSMsg(message))
     }
 
     fun sendFriendRequest() {
-        requireConnection()
-            .writer()
-            .send(LPSClientMessage.LPSFriendAction(LPSClientMessage.RequestType.SEND))
+        sendMessage(LPSClientMessage.LPSFriendAction(LPSClientMessage.RequestType.SEND))
     }
 
     fun sendFriendAcceptance(accepted: Boolean) {
-        requireConnection()
-            .writer()
-            .send(
-                LPSClientMessage.LPSFriendAction(
-                    if (accepted) LPSClientMessage.RequestType.ACCEPT else LPSClientMessage.RequestType.DENY
-                )
+        sendMessage(
+            LPSClientMessage.LPSFriendAction(
+                if (accepted) LPSClientMessage.RequestType.ACCEPT else LPSClientMessage.RequestType.DENY
             )
+        )
     }
 
     fun sendFriendRequestResult(accepted: Boolean, userId: Int) {
-        requireConnection()
-            .writer()
-            .send(
-                LPSClientMessage.LPSFriendMode(
-                    res = if (accepted) 1 else 2,
-                    oppUid = userId
-                )
+        sendMessage(
+            LPSClientMessage.LPSFriendMode(
+                res = if (accepted) 1 else 2,
+                oppUid = userId
             )
+        )
     }
 
 }
