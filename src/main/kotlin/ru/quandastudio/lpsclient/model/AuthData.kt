@@ -6,10 +6,10 @@ data class AuthData(
     var login: String,
     var snUID: String,
     var snType: AuthType,
-    var accessToken: String
+    var accessToken: String,
+    var userID: Int = 0,
+    var accessHash: String? = "--no hash--"
 ) {
-    var accessHash: String? = null
-    var userID: Int = 0
 
     val hash: String
         get() = Utils.md5("$login,$snUID,$snType,")

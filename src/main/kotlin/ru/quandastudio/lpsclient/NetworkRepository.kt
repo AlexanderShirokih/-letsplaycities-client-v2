@@ -20,22 +20,25 @@ class NetworkRepository(private val mNetworkClient: NetworkClient, private val t
     private val disposable = CompositeDisposable()
 
     private val inputMessageR = ReplaySubject.create<LPSMessage> {
+        println("::Create")
         while (!it.isDisposed && mNetworkClient.isConnected()) {
+            println("::Wait for msg")
             it.onNext(
                 try {
                     mNetworkClient.readMessage()
                 } catch (e: IOException) {
-                    LPSMessage.LPSDisconnectMessage
+                    LPSMessage.LPSLeaveMessage(false)
                 }
             )
         }
+        println("::Completion")
         it.onComplete()
     }
 
     private val inputMessage: Observable<LPSMessage> by lazy {
         inputMessageR
             .subscribeOn(Schedulers.io())
-            .onErrorReturn { LPSMessage.LPSDisconnectMessage }
+            .onErrorReturn { LPSMessage.LPSLeaveMessage(false) }
             .publish().refCount(1, TimeUnit.SECONDS)
     }
 
@@ -65,9 +68,9 @@ class NetworkRepository(private val mNetworkClient: NetworkClient, private val t
         inputMessage.filter { it is LPSMessage.LPSBannedMessage }.cast(LPSMessage.LPSBannedMessage::class.java)
             .firstElement()
 
-    val disconnect: Maybe<LPSMessage.LPSDisconnectMessage> by lazy {
-        inputMessage.filter { it is LPSMessage.LPSDisconnectMessage }
-            .cast(LPSMessage.LPSDisconnectMessage::class.java)
+    val disconnect: Maybe<LPSMessage.LPSLeaveMessage> by lazy {
+        inputMessage.filter { it is LPSMessage.LPSLeaveMessage && !it.leaved }
+            .cast(LPSMessage.LPSLeaveMessage::class.java)
             .firstElement()
     }
 
@@ -83,13 +86,23 @@ class NetworkRepository(private val mNetworkClient: NetworkClient, private val t
 
     class BannedPlayerException : Exception()
 
-    fun play(isWaiting: Boolean, friendId: Int?): Maybe<Pair<PlayerData, Boolean>> {
+    private fun connectAndPlay(isWaiting: Boolean, friendId: Int?): Single<NetworkClient> {
         return networkClient()
+            .doOnSuccess {
+                println("We have NC!")
+            }
             .doOnSuccess { client -> client.play(isWaiting, friendId) }
+    }
+
+    fun play(isWaiting: Boolean, friendId: Int?): Maybe<Pair<PlayerData, Boolean>> {
+        return connectAndPlay(isWaiting, friendId)
             .toObservable()
             .flatMap {
-                inputMessage.filter { it is LPSMessage.LPSPlayMessage }
+                inputMessage.filter { msg: LPSMessage -> msg is LPSMessage.LPSPlayMessage }
                     .cast(LPSMessage.LPSPlayMessage::class.java)
+            }
+            .doOnNext {
+                println("We have play msg!")
             }
             .flatMap {
                 if (it.banned) Observable.error(BannedPlayerException()) else Observable.just(it)
@@ -102,7 +115,7 @@ class NetworkRepository(private val mNetworkClient: NetworkClient, private val t
                         Observable.error(err)
                 }
             }
-            .map { it.opponentPlayer to it.youStarter }
+            .map { it.getPlayerData() to it.youStarter }
             .firstElement()
     }
 
@@ -116,11 +129,11 @@ class NetworkRepository(private val mNetworkClient: NetworkClient, private val t
                 inputMessage.filter { it is LPSMessage.LPSPlayMessage }
                     .cast(LPSMessage.LPSPlayMessage::class.java)
             }
-            .map { it.opponentPlayer to it.youStarter }
+            .map { it.getPlayerData() to it.youStarter }
             .firstElement()
     }
 
-    fun getBlackList(): Single<ArrayList<BlackListItem>> {
+    fun getBlackList(): Single<List<BlackListItem>> {
         return networkClient()
             .doOnSuccess { t -> t.requestBlackList() }
             .toObservable()

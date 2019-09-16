@@ -5,9 +5,5 @@ enum class FriendModeResult {
     OFFLINE,
     NOT_FRIEND,
     DENIED;
-
-    companion object {
-        fun from(index: Int) = values()[index]
-    }
 }
 

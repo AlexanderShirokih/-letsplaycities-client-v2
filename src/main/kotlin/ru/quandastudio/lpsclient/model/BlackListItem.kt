@@ -1,3 +1,3 @@
 package ru.quandastudio.lpsclient.model
 
-class BlackListItem(val userName: String, val userId: Int)
+data class BlackListItem(val login: String, val userId: Int)

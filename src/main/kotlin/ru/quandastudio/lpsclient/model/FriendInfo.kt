@@ -1,7 +1,7 @@
 package ru.quandastudio.lpsclient.model
 
-class FriendInfo(
+data class FriendInfo(
     var userId: Int,
-    var name: String,
-    var isAccepted: Boolean
+    var login: String,
+    var accepted: Boolean
 )
