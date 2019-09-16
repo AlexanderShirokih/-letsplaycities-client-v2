@@ -15,9 +15,17 @@ class NetworkClient constructor(val isLocal: Boolean, host: String, port: Int = 
 
     private val json = JsonMessage()
     private val mSocket = SocketObservable(host, port)
-    private val mSharedSocket = mSocket
+    private val mSharedSocket: Observable<LPSMessage> = mSocket
         .doOnError {
             println("Error catched: $it")
+            it.printStackTrace()
+        }
+        .map {
+            when (it.state) {
+                SocketObservable.State.DISCONNECTED -> LPSMessage.LPSLeaveMessage(false)
+                SocketObservable.State.DATA -> json.read(it.data)
+                SocketObservable.State.CONNECTED -> LPSMessage.LPSConnectedMessage
+            }
         }
         .subscribeOn(Schedulers.io())
         .publish().refCount(1, TimeUnit.SECONDS)
@@ -29,7 +37,7 @@ class NetworkClient constructor(val isLocal: Boolean, host: String, port: Int = 
 
     fun connect(): Observable<NetworkClient> {
         return mSharedSocket
-            .filter { it.state == SocketObservable.State.CONNECTED }
+            .filter { it is LPSMessage.LPSConnectedMessage }
             .map { this@NetworkClient }
     }
 
@@ -43,13 +51,6 @@ class NetworkClient constructor(val isLocal: Boolean, host: String, port: Int = 
     }
 
     fun getMessages(): Observable<LPSMessage> = mSharedSocket
-        .filter { it.state != SocketObservable.State.CONNECTED }
-        .map {
-            if (it.state == SocketObservable.State.DISCONNECTED)
-                LPSMessage.LPSLeaveMessage(false)
-            else
-                json.read(it.data)
-        }
 
     private fun sendMessage(message: LPSClientMessage) = requireConnection().sendData(json.write(message))
 

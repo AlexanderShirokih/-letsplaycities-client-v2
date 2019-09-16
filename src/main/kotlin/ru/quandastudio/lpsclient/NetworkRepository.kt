@@ -17,13 +17,6 @@ class NetworkRepository(private val mNetworkClient: NetworkClient, private val t
 
     private val disposable = CompositeDisposable()
 
-//    private val inputMessage: Observable<LPSMessage> by lazy {
-//        inputMessageR
-//            .subscribeOn(Schedulers.io())
-//            .onErrorReturn { LPSMessage.LPSLeaveMessage(false) }
-//            .publish().refCount(1, TimeUnit.SECONDS)
-//    }
-
     private fun inputMessage(): Observable<LPSMessage> = mNetworkClient.getMessages()
 
     val isLocal = mNetworkClient.isLocal
@@ -75,9 +68,6 @@ class NetworkRepository(private val mNetworkClient: NetworkClient, private val t
             .flatMap {
                 inputMessage().filter { msg: LPSMessage -> msg is LPSMessage.LPSPlayMessage }
                     .cast(LPSMessage.LPSPlayMessage::class.java)
-            }
-            .doOnNext {
-                println("We have play msg!")
             }
             .flatMap {
                 if (it.banned) Observable.error(BannedPlayerException()) else Observable.just(it)

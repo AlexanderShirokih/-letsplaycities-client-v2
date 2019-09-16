@@ -32,13 +32,10 @@ class SenderThread(private val mSocket: Socket, private val mObserver: ThreadObs
     private fun sendPendingTasks(writer: BufferedWriter) {
         if (tasks.isEmpty()) {
             synchronized(lock) {
-                println("Sleeping...")
                 lock.wait()
-                println("Awake!")
             }
         }
         val task: CharArray = tasks.poll() ?: return
-        println("Writing task...")
         writer.write(task)
         writer.flush()
     }
@@ -46,7 +43,6 @@ class SenderThread(private val mSocket: Socket, private val mObserver: ThreadObs
     fun send(data: CharArray) {
         tasks.add(data)
         synchronized(lock) {
-            println("Notify tasks...")
             lock.notifyAll()
         }
     }

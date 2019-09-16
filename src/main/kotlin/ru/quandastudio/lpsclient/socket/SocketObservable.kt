@@ -12,17 +12,19 @@ class SocketObservable(private val host: String, private val port: Int) : Observ
 
     class StatefulData(private val observable: SocketObservable, val state: State, val data: CharArray) {
         fun sendResponse(data: CharArray) = observable.sendData(data)
-        val isData = state == State.DATA
     }
 
     private inner class SocketObserver : ThreadObserver {
         override fun isDisposed(): Boolean = mSocket.isClosed && !receiverThread.isAlive && !senderThread.isAlive
 
         override fun dispose() {
-            println("DISPOSING!")
-            receiverThread.interrupt()
-            senderThread.interrupt()
-            mSocket.close()
+            println("Disposing!")
+            if (!receiverThread.isInterrupted)
+                receiverThread.interrupt()
+            if (!senderThread.isInterrupted)
+                senderThread.interrupt()
+            if (!mSocket.isClosed)
+                mSocket.close()
             observer?.onNext(
                 StatefulData(
                     this@SocketObservable,
@@ -33,7 +35,6 @@ class SocketObservable(private val host: String, private val port: Int) : Observ
         }
 
         override fun onNext(data: CharArray) {
-            println("ON next! hasObserver=${observer != null}")
             observer?.onNext(
                 StatefulData(
                     this@SocketObservable,
@@ -60,7 +61,7 @@ class SocketObservable(private val host: String, private val port: Int) : Observ
         println("Subscribe!")
 
         try {
-            val timeout = 120 * 1000;
+            val timeout = 15 * 60 * 1000
             mSocket.connect(InetSocketAddress(host, port), timeout)
             mSocket.soTimeout = timeout
             println("Connected!")
@@ -76,7 +77,6 @@ class SocketObservable(private val host: String, private val port: Int) : Observ
                 )
             )
         } catch (e: IOException) {
-            println("We got an error: $e")
             observer.onNext(
                 StatefulData(
                     this,
@@ -89,7 +89,7 @@ class SocketObservable(private val host: String, private val port: Int) : Observ
     }
 
     fun sendData(data: CharArray) {
-        println("sendData: ${data.contentToString()}")
+        println("sendData: ${String(data)}")
         if (mSocket.isConnected)
             senderThread.send(data)
     }

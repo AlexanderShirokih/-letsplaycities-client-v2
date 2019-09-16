@@ -81,4 +81,6 @@ sealed class LPSMessage {
 
     object LPSTimeoutMessage : LPSMessage()
 
+    object LPSConnectedMessage : LPSMessage()
+
 }
