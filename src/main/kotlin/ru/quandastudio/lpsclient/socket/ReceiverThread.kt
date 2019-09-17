@@ -15,7 +15,8 @@ class ReceiverThread(private val mSocket: Socket, private val mObserver: ThreadO
                 val reader = mSocket.getInputStream().bufferedReader()
 
                 //size:[sizeInBytes][data]
-                val size = reader.readLine().substring(5).toInt()
+                val line = reader.readLine()
+                val size = line?.substring(5)?.toInt() ?: 0
                 val buffer = CharArray(size)
 
                 reader.read(buffer)

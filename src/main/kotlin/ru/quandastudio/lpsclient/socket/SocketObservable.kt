@@ -36,13 +36,16 @@ class SocketObservable(private val host: String, private val port: Int) : Observ
         }
 
         override fun onNext(data: CharArray) {
-            observer?.onNext(
-                StatefulData(
-                    this@SocketObservable,
-                    State.DATA,
-                    data
+            if (data.isEmpty())
+                dispose()
+            else
+                observer?.onNext(
+                    StatefulData(
+                        this@SocketObservable,
+                        State.DATA,
+                        data
+                    )
                 )
-            )
         }
 
         override fun onError(e: Exception) {
