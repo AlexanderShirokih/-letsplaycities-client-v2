@@ -5,12 +5,10 @@ import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
 import java.lang.reflect.Type
 
-class LPSMessageDeserializer : JsonDeserializer<LPSMessage> {
-    private val lpsMessages = LPSMessage::class.sealedSubclasses
+class LPSClientMessageDeserializer : JsonDeserializer<LPSClientMessage> {
+    private val lpsMessages = LPSClientMessage::class.sealedSubclasses
 
-    override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): LPSMessage {
-        println("INPUT: $json")
-
+    override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): LPSClientMessage {
         val action = json.asJsonObject["action"].asString
 
         val clz = lpsMessages.firstOrNull() {
@@ -18,10 +16,10 @@ class LPSMessageDeserializer : JsonDeserializer<LPSMessage> {
             annotation.name.isNotEmpty() && annotation.name == action
         }
 
-        val res: LPSMessage = if (clz != null)
+        val res: LPSClientMessage = if (clz != null)
             context.deserialize(json, clz.java)
         else
-            LPSMessage.LPSUnknownMessage
+            LPSClientMessage.LPSLeave("Deserialization error!")
         println("RES: $res")
         return res
     }

@@ -5,19 +5,23 @@ import ru.quandastudio.lpsclient.model.*
 import ru.quandastudio.lpsclient.core.Base64Ext.decodeBase64
 import ru.quandastudio.lpsclient.core.Base64Ext.encodeBase64
 
-sealed class LPSMessage(val action: String) {
+sealed class LPSMessage {
+    val action: String = (this::class.annotations.first { it is Action } as Action).name
 
+    @Action("logged_in")
     data class LPSLoggedIn(
         val userId: Int,
         val accHash: String,
         val newerBuild: Int
-    ) : LPSMessage("logged_in")
+    ) : LPSMessage()
 
+    @Action("login_error")
     data class LPSBanned(
         val banReason: String? = null,
         val connError: String? = null
-    ) : LPSMessage("login_error")
+    ) : LPSMessage()
 
+    @Action("join")
     data class LPSPlayMessage(
         val canReceiveMessages: Boolean,
         val login: String,
@@ -30,7 +34,7 @@ sealed class LPSMessage(val action: String) {
         var authType: AuthType?,
         var youStarter: Boolean,
         var banned: Boolean = false
-    ) : LPSMessage("join") {
+    ) : LPSMessage() {
 
         fun getPlayerData() = PlayerData(
             AuthData(login, snUID ?: "", authType ?: AuthType.Native, "", userID = oppUid),
@@ -48,43 +52,54 @@ sealed class LPSMessage(val action: String) {
         }
     }
 
+    @Action("word")
     data class LPSWordMessage(
         val result: WordResult,
         val word: String
-    ) : LPSMessage("word")
+    ) : LPSMessage()
 
+    @Action("msg")
     data class LPSMsgMessage(
         val msg: String,
         val isSystemMsg: Boolean
-    ) : LPSMessage("msg")
+    ) : LPSMessage()
 
-    data class LPSLeaveMessage(val leaved: Boolean) : LPSMessage("leave")
+    @Action("leave")
+    data class LPSLeaveMessage(val leaved: Boolean) : LPSMessage()
 
+    @Action("banned")
     data class LPSBannedMessage(
         val isBannedBySystem: Boolean = true,
         val description: String = ""
-    ) : LPSMessage("banned")
+    ) : LPSMessage()
 
-    data class LPSBannedListMessage(val list: List<BlackListItem>) : LPSMessage("banlist")
+    @Action("banlist")
+    data class LPSBannedListMessage(val list: List<BlackListItem>) : LPSMessage()
 
-    data class LPSFriendsList(val list: ArrayList<FriendInfo>) : LPSMessage("friends")
+    @Action("friends")
+    data class LPSFriendsList(val list: ArrayList<FriendInfo>) : LPSMessage()
 
+    @Action("fm_request")
     data class LPSFriendModeRequest(
         val login: String? = null,
         val oppUid: Int? = null,
         val result: FriendModeResult
-    ) : LPSMessage("fm_request")
+    ) : LPSMessage()
 
     enum class FriendRequest { NEW_REQUEST, ACCEPTED, DENIED }
 
+    @Action("friend_request")
     data class LPSFriendRequest(
         val requestResult: FriendRequest
-    ) : LPSMessage("friend_request")
+    ) : LPSMessage()
 
-    object LPSTimeoutMessage : LPSMessage("timeout")
+    @Action("timeout")
+    object LPSTimeoutMessage : LPSMessage()
 
-    object LPSUnknownMessage : LPSMessage("")
+    @Action
+    object LPSUnknownMessage : LPSMessage()
 
-    object LPSConnectedMessage : LPSMessage("")
+    @Action
+    object LPSConnectedMessage : LPSMessage()
 
 }

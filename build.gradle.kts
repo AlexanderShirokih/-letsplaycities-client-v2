@@ -35,4 +35,5 @@ dependencies {
     implementation("io.reactivex.rxjava2:rxkotlin:2.4.0")
     implementation(kotlin("stdlib-jdk8"))
     testImplementation("junit:junit:4.12")
+    compile(kotlin("reflect"))
 }

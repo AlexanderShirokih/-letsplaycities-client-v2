@@ -5,8 +5,10 @@ import ru.quandastudio.lpsclient.model.AuthType
 import ru.quandastudio.lpsclient.model.PlayerData
 import ru.quandastudio.lpsclient.core.Base64Ext.decodeBase64
 
-sealed class LPSClientMessage(val action: String) {
+sealed class LPSClientMessage {
+    val action: String = (this::class.annotations.first { it is Action } as Action).name
 
+    @Action("login")
     data class LPSLogIn(
         val version: Int,
         val login: String,
@@ -21,7 +23,7 @@ sealed class LPSClientMessage(val action: String) {
         val uid: Int?,
         val hash: String?,
         val avatar: String?
-    ) : LPSClientMessage("login") {
+    ) : LPSClientMessage() {
         constructor(pd: PlayerData, fbToken: String, userId: Int?, hash: String?, avatar: String?) : this(
             version = 4,
             login = pd.authData.login,
@@ -53,17 +55,20 @@ sealed class LPSClientMessage(val action: String) {
         FRIEND
     }
 
+    @Action("play")
     data class LPSPlay(
         val mode: PlayMode,
         val oppUid: Int?
-    ) : LPSClientMessage("play")
+    ) : LPSClientMessage()
 
+    @Action("banlist")
     data class LPSBanList(
         val type: RequestType,
         val friendUid: Int? = null
-    ) : LPSClientMessage("banlist")
+    ) : LPSClientMessage()
 
-    object LPSFriendList : LPSClientMessage("friends_list")
+    @Action("friends_list")
+    object LPSFriendList : LPSClientMessage()
 
     enum class RequestType {
         QUERY_LIST,
@@ -73,28 +78,34 @@ sealed class LPSClientMessage(val action: String) {
         DENY
     }
 
+    @Action("friend")
     data class LPSFriendAction(
         val type: RequestType,
         val oppUid: Int? = null
-    ) : LPSClientMessage("friend")
+    ) : LPSClientMessage()
 
+    @Action("ban")
     data class LPSBan(
         val type: String = "report",
         val targetId: Int? = null
-    ) : LPSClientMessage("ban")
+    ) : LPSClientMessage()
 
+    @Action("word")
     data class LPSWord(
         val word: String
-    ) : LPSClientMessage("word")
+    ) : LPSClientMessage()
 
+    @Action("msg")
     data class LPSMsg(
         val msg: String
-    ) : LPSClientMessage("msg")
+    ) : LPSClientMessage()
 
+    @Action("fm_req_result")
     data class LPSFriendMode(
         val res: Int,
         val oppUid: Int
-    ) : LPSClientMessage("fm_req_result")
+    ) : LPSClientMessage()
 
-    object LPSLeave : LPSClientMessage("leave")
+    @Action("leave")
+    data class LPSLeave(val reason: String? = null) : LPSClientMessage()
 }
