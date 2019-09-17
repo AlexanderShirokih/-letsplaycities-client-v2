@@ -19,6 +19,7 @@ class SocketObservable(private val host: String, private val port: Int) : Observ
 
         override fun dispose() {
             println("Disposing!")
+
             if (!receiverThread.isInterrupted)
                 receiverThread.interrupt()
             if (!senderThread.isInterrupted)
@@ -49,11 +50,21 @@ class SocketObservable(private val host: String, private val port: Int) : Observ
         }
     }
 
-    private val mSocket = Socket()
+    private lateinit var mSocket: Socket
+    private lateinit var receiverThread: ReceiverThread
+    private lateinit var senderThread: SenderThread
     private val threadObserver = SocketObserver()
-    private val receiverThread = ReceiverThread(mSocket, threadObserver)
-    private val senderThread = SenderThread(mSocket, threadObserver)
     private var observer: Observer<in StatefulData>? = null
+
+    init {
+        init()
+    }
+
+    private fun init() {
+        mSocket = Socket()
+        receiverThread = ReceiverThread(mSocket, threadObserver)
+        senderThread = SenderThread(mSocket, threadObserver)
+    }
 
     override fun subscribeActual(observer: Observer<in StatefulData>) {
         this.observer = observer
@@ -61,6 +72,13 @@ class SocketObservable(private val host: String, private val port: Int) : Observ
         println("Subscribe!")
 
         try {
+
+            if (mSocket.isClosed) {
+                if (!threadObserver.isDisposed)
+                    threadObserver.dispose()
+                init()
+            }
+
             val timeout = 15 * 60 * 1000
             mSocket.connect(InetSocketAddress(host, port), timeout)
             mSocket.soTimeout = timeout
