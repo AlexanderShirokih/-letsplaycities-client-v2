@@ -38,7 +38,7 @@ class SenderThread(private val mSocket: Socket, private val mObserver: ThreadObs
         val task: CharArray = tasks.poll() ?: return
 
         writer.apply {
-            write("size:${task.size}")
+            write("size:${task.size}\n")
             write(task)
             flush()
         }
