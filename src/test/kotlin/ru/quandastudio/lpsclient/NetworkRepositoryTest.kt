@@ -14,7 +14,7 @@ internal class NetworkRepositoryTest {
         val repository = NetworkRepository(networkClient, Single.just("test"))
         val playerData = createPlayerData()
 
-        val it = repository.login(playerData)
+        val it = repository.login(playerData) { println("Connected.,,") }
             .doOnSubscribe { println("Connecting to server...") }
             .doOnNext { println("LoggedIn: ${it.authData}") }
             .doOnNext { println("Waiting for opponent...") }

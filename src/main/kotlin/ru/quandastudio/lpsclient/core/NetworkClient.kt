@@ -73,16 +73,16 @@ class NetworkClient constructor(val isLocal: Boolean, host: String, port: Int = 
             .doOnNext(::sendMessage)
             .flatMap { getMessages() }
             .firstElement()
-            .map {
+            .flatMap {
                 when (it) {
                     is LPSMessage.LPSBanned ->
-                        throw AuthorizationException(it.banReason, it.connError)
+                        Maybe.error(AuthorizationException(it.banReason, it.connError))
                     is LPSMessage.LPSLoggedIn -> {
                         ad.userID = it.userId
                         ad.accessHash = it.accHash
-                        AuthResult(ad, it.newerBuild)
+                        Maybe.just(AuthResult(ad, it.newerBuild))
                     }
-                    else -> throw LPSException("Waiting for LPSLoggedIn message, but $it received")
+                    else -> Maybe.error(LPSException("Waiting for LPSLoggedIn message, but $it received"))
                 }
             }
     }
