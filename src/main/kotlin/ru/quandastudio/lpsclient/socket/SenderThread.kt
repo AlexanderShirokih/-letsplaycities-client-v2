@@ -36,8 +36,12 @@ class SenderThread(private val mSocket: Socket, private val mObserver: ThreadObs
             }
         }
         val task: CharArray = tasks.poll() ?: return
-        writer.write(task)
-        writer.flush()
+
+        writer.apply {
+            write("size:${task.size}")
+            write(task)
+            flush()
+        }
     }
 
     fun send(data: CharArray) {
