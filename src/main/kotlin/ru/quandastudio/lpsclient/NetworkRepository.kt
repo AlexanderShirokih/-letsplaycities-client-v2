@@ -54,10 +54,9 @@ class NetworkRepository(private val mNetworkClient: NetworkClient, private val t
         Observable.just(mNetworkClient)
             .subscribeOn(Schedulers.io())
 
-    fun login(userData: PlayerData, onConnected: () -> Unit): Observable<NetworkClient.AuthResult> {
+    fun login(userData: PlayerData): Observable<NetworkClient.AuthResult> {
         return networkClient()
             .flatMap { it.connect() }
-            .doOnNext { onConnected() }
             .flatMapMaybe { it.login(userData, token.blockingGet()) }
     }
 
