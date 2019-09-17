@@ -81,6 +81,8 @@ class NetworkClient constructor(
             .firstElement()
             .flatMap {
                 when (it) {
+                    is LPSMessage.LPSLeaveMessage ->
+                        Maybe.error(LPSException("Cannot logIn on server"))
                     is LPSMessage.LPSBanned ->
                         Maybe.error(AuthorizationException(it.banReason, it.connError))
                     is LPSMessage.LPSLoggedIn -> {
