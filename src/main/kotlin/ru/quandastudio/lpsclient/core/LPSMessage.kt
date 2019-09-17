@@ -74,10 +74,10 @@ sealed class LPSMessage {
     ) : LPSMessage()
 
     @Action("banlist")
-    data class LPSBannedListMessage(val list: List<BlackListItem>) : LPSMessage()
+    data class LPSBannedListMessage(val data: List<BlackListItem>) : LPSMessage()
 
     @Action("friends")
-    data class LPSFriendsList(val list: ArrayList<FriendInfo>) : LPSMessage()
+    data class LPSFriendsList(val data: ArrayList<FriendInfo>) : LPSMessage()
 
     @Action("fm_request")
     data class LPSFriendModeRequest(

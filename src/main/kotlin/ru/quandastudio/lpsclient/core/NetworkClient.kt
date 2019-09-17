@@ -69,11 +69,11 @@ class NetworkClient constructor(
         return Observable
             .fromCallable {
                 LPSClientMessage.LPSLogIn(
-                    userData,
-                    fbToken,
-                    if (ad.userID > 0) ad.userID else null,
-                    ad.accessHash,
-                    userData.avatar?.toBase64()
+                    pd = userData,
+                    fbToken = fbToken,
+                    userId = if (ad.userID > 0) ad.userID else null,
+                    hash = ad.accessHash,
+                    avatar = userData.avatar?.toBase64()
                 )
             }
             .doOnNext(::sendMessage)

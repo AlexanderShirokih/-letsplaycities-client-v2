@@ -104,7 +104,7 @@ class NetworkRepository(private val mNetworkClient: NetworkClient, private val t
                     .cast(LPSMessage.LPSBannedListMessage::class.java)
             }
             .firstOrError()
-            .map { it.list }
+            .map { it.data }
     }
 
     fun getFriendsList(): Single<ArrayList<FriendInfo>> {
@@ -114,7 +114,7 @@ class NetworkRepository(private val mNetworkClient: NetworkClient, private val t
                 inputMessage().filter { it is LPSMessage.LPSFriendsList }.cast(LPSMessage.LPSFriendsList::class.java)
             }
             .firstOrError()
-            .map { it.list }
+            .map { it.data }
     }
 
     fun deleteFriend(userId: Int): Completable {
