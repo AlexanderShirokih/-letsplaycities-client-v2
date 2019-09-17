@@ -8,10 +8,14 @@ import ru.quandastudio.lpsclient.LPSException
 import ru.quandastudio.lpsclient.model.AuthData
 import ru.quandastudio.lpsclient.model.PlayerData
 import ru.quandastudio.lpsclient.socket.SocketObservable
-import java.util.Base64
 import java.util.concurrent.TimeUnit
 
-class NetworkClient constructor(base64Provider: Base64Provider, val isLocal: Boolean, host: String, port: Int = 62964) {
+class NetworkClient constructor(
+    private val base64Provider: Base64Provider,
+    val isLocal: Boolean,
+    host: String,
+    port: Int = 62964
+) {
 
     init {
         Base64Ext.installBase64(base64Provider)
@@ -58,9 +62,7 @@ class NetworkClient constructor(base64Provider: Base64Provider, val isLocal: Boo
 
     private fun sendMessage(message: LPSClientMessage) = requireConnection().sendData(json.write(message))
 
-    private fun ByteArray.toBase64(): String {
-        return Base64.getEncoder().encodeToString(this)
-    }
+    private fun ByteArray.toBase64(): String = base64Provider.encode(this)
 
     fun login(userData: PlayerData, fbToken: String): Maybe<AuthResult> {
         val ad = userData.authData
