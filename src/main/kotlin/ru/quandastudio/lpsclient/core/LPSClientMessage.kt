@@ -1,7 +1,9 @@
 package ru.quandastudio.lpsclient.core
 
+import ru.quandastudio.lpsclient.model.AuthData
 import ru.quandastudio.lpsclient.model.AuthType
 import ru.quandastudio.lpsclient.model.PlayerData
+import ru.quandastudio.lpsclient.core.Base64Ext.decodeBase64
 
 sealed class LPSClientMessage(val action: String) {
 
@@ -35,6 +37,15 @@ sealed class LPSClientMessage(val action: String) {
             hash = hash,
             avatar = avatar
         )
+
+        fun getPlayerData(): PlayerData =
+            PlayerData(AuthData(login, snUID, authType, ""))
+                .also { pd ->
+                    pd.canReceiveMessages = canReceiveMessages
+                    pd.clientVersion = clientVersion
+                    pd.clientBuild = clientBuild
+                    pd.avatar = avatar?.decodeBase64()
+                }
     }
 
     enum class PlayMode {
@@ -84,4 +95,6 @@ sealed class LPSClientMessage(val action: String) {
         val res: Int,
         val oppUid: Int
     ) : LPSClientMessage("fm_req_result")
+
+    object LPSLeave : LPSClientMessage("leave")
 }

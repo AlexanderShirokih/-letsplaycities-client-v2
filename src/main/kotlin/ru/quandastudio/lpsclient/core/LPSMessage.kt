@@ -1,26 +1,27 @@
 package ru.quandastudio.lpsclient.core
 
-import ru.quandastudio.lpsclient.model.*
-import java.util.*
 import kotlin.collections.ArrayList
+import ru.quandastudio.lpsclient.model.*
+import ru.quandastudio.lpsclient.core.Base64Ext.decodeBase64
+import ru.quandastudio.lpsclient.core.Base64Ext.encodeBase64
 
-sealed class LPSMessage {
+sealed class LPSMessage(val action: String) {
 
     data class LPSLoggedIn(
         val userId: Int,
         val accHash: String,
         val newerBuild: Int
-    ) : LPSMessage()
+    ) : LPSMessage("logged_in")
 
     data class LPSBanned(
         val banReason: String? = null,
         val connError: String? = null
-    ) : LPSMessage()
+    ) : LPSMessage("login_error")
 
     data class LPSPlayMessage(
         val canReceiveMessages: Boolean,
-        val avatar: String? = null,
         val login: String,
+        var avatar: String? = null,
         var oppUid: Int,
         var clientVersion: String,
         var clientBuild: Int,
@@ -28,10 +29,8 @@ sealed class LPSMessage {
         var snUID: String?,
         var authType: AuthType?,
         var youStarter: Boolean,
-        var banned: Boolean
-    ) : LPSMessage() {
-
-        private fun String.decodeBase64(): ByteArray = Base64.getDecoder().decode(this)
+        var banned: Boolean = false
+    ) : LPSMessage("join") {
 
         fun getPlayerData() = PlayerData(
             AuthData(login, snUID ?: "", authType ?: AuthType.Native, "", userID = oppUid),
@@ -42,45 +41,50 @@ sealed class LPSMessage {
             isFriend = isFriend,
             allowSendUID = true
         )
+
+        fun setAvatar(data: ByteArray?): LPSPlayMessage {
+            avatar = data?.encodeBase64()
+            return this
+        }
     }
 
     data class LPSWordMessage(
         val result: WordResult,
         val word: String
-    ) : LPSMessage()
+    ) : LPSMessage("word")
 
     data class LPSMsgMessage(
         val msg: String,
         val isSystemMsg: Boolean
-    ) : LPSMessage()
+    ) : LPSMessage("msg")
 
-    data class LPSLeaveMessage(val leaved: Boolean) : LPSMessage()
+    data class LPSLeaveMessage(val leaved: Boolean) : LPSMessage("leave")
 
     data class LPSBannedMessage(
         val isBannedBySystem: Boolean = true,
         val description: String = ""
-    ) : LPSMessage()
+    ) : LPSMessage("banned")
 
-    data class LPSBannedListMessage(val list: List<BlackListItem>) : LPSMessage()
+    data class LPSBannedListMessage(val list: List<BlackListItem>) : LPSMessage("banlist")
 
-    data class LPSFriendsList(val list: ArrayList<FriendInfo>) : LPSMessage()
+    data class LPSFriendsList(val list: ArrayList<FriendInfo>) : LPSMessage("friends")
 
     data class LPSFriendModeRequest(
         val login: String? = null,
         val oppUid: Int? = null,
         val result: FriendModeResult
-    ) : LPSMessage()
+    ) : LPSMessage("fm_request")
 
     enum class FriendRequest { NEW_REQUEST, ACCEPTED, DENIED }
 
     data class LPSFriendRequest(
         val requestResult: FriendRequest
-    ) : LPSMessage()
+    ) : LPSMessage("friend_request")
 
-    object LPSUnknownMessage : LPSMessage()
+    object LPSTimeoutMessage : LPSMessage("timeout")
 
-    object LPSTimeoutMessage : LPSMessage()
+    object LPSUnknownMessage : LPSMessage("")
 
-    object LPSConnectedMessage : LPSMessage()
+    object LPSConnectedMessage : LPSMessage("")
 
 }
