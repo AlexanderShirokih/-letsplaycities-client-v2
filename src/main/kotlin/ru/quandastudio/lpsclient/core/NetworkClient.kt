@@ -23,7 +23,7 @@ class NetworkClient constructor(val isLocal: Boolean, host: String, port: Int = 
         .map {
             when (it.state) {
                 SocketObservable.State.DISCONNECTED -> LPSMessage.LPSLeaveMessage(false)
-                SocketObservable.State.DATA -> json.read(it.data)
+                SocketObservable.State.DATA -> json.readMessage(it.data)
                 SocketObservable.State.CONNECTED -> LPSMessage.LPSConnectedMessage
             }
         }
