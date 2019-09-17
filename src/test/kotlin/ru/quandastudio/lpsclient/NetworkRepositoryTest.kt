@@ -12,7 +12,7 @@ internal class NetworkRepositoryTest {
     fun testPlayGame() {
         val networkClient = NetworkClient(false, "localhost")
         val repository = NetworkRepository(networkClient, Single.just("test"))
-        val playerData = createPlayerData()
+        val playerData = createPlayerData(true)
 
         val it = repository.login(playerData)
             .doOnSubscribe { println("Connecting to server...") }
@@ -25,8 +25,14 @@ internal class NetworkRepositoryTest {
         println("Play as=${playerData.authData.login}, with=${it.first.authData.login}, starter=${it.second}")
     }
 
-    private fun createPlayerData(): PlayerData {
-        return PlayerData.Factory().create("UnitTest")
+    private fun createPlayerData(useAvatar: Boolean): PlayerData {
+        val playerData = PlayerData.Factory().create("UnitTest")
+        val resourceStream = if (useAvatar) ClassLoader.getSystemResourceAsStream("test-avatar.png") else null
+        resourceStream?.run {
+            println("Reading avatar")
+            playerData.avatar = readAllBytes()
+        }
+        return playerData
     }
 
 }
