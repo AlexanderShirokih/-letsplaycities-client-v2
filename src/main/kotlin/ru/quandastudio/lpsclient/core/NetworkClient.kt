@@ -11,7 +11,11 @@ import ru.quandastudio.lpsclient.socket.SocketObservable
 import java.util.Base64
 import java.util.concurrent.TimeUnit
 
-class NetworkClient constructor(val isLocal: Boolean, host: String, port: Int = 62964) {
+class NetworkClient constructor(base64Provider: Base64Provider, val isLocal: Boolean, host: String, port: Int = 62964) {
+
+    init {
+        Base64Ext.installBase64(base64Provider)
+    }
 
     private val json = JsonMessage()
     private val mSocket = SocketObservable(host, port)

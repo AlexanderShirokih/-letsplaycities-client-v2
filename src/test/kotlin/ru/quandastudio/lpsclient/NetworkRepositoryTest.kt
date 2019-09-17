@@ -3,6 +3,7 @@ package ru.quandastudio.lpsclient
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 import org.junit.Test
+import ru.quandastudio.lpsclient.core.Base64JDK8Impl
 import ru.quandastudio.lpsclient.core.NetworkClient
 import ru.quandastudio.lpsclient.model.PlayerData
 
@@ -10,7 +11,7 @@ internal class NetworkRepositoryTest {
 
     @Test
     fun testPlayGame() {
-        val networkClient = NetworkClient(false, "localhost")
+        val networkClient = NetworkClient(Base64JDK8Impl(), false, "localhost")
         val repository = NetworkRepository(networkClient, Single.just("test"))
         val playerData = createPlayerData(true)
 
