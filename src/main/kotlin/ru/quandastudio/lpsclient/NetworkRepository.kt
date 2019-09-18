@@ -75,7 +75,7 @@ class NetworkRepository(private val mNetworkClient: NetworkClient, private val t
             .retryWhen { errors ->
                 errors.flatMap { err ->
                     if (err is BannedPlayerException)
-                        Observable.just(0L).delay((0L..1L).random(), TimeUnit.SECONDS)
+                        Observable.just(0L).delay((2L..5L).random(), TimeUnit.SECONDS)
                     else
                         Observable.error(err)
                 }
