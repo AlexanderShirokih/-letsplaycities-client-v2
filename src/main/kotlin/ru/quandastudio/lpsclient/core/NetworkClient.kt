@@ -36,7 +36,7 @@ class NetworkClient constructor(
             }
         }
         .subscribeOn(Schedulers.io())
-        .publish().refCount(1, TimeUnit.SECONDS)
+        .publish().refCount(7, TimeUnit.SECONDS)
 
     class AuthResult(
         val authData: AuthData,
