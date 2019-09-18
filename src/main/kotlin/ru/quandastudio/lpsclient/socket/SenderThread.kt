@@ -1,7 +1,6 @@
 package ru.quandastudio.lpsclient.socket
 
 import java.io.BufferedWriter
-import java.io.IOException
 import java.net.Socket
 import java.util.concurrent.ArrayBlockingQueue
 
@@ -17,13 +16,9 @@ class SenderThread(private val mSocket: Socket, private val mObserver: ThreadObs
                 val writer = mSocket.getOutputStream().bufferedWriter()
                 sendPendingTasks(writer)
             }
-        } catch (e: InterruptedException) {
-            // ThreadObserver should interrupt this thread
-            mObserver.dispose()
-        } catch (e: IOException) {
-            mObserver.onError(e)
-        } catch (e: NullPointerException) {
-            mObserver.onError(e)
+        } catch (e: Exception) {
+            if(e !is InterruptedException && !mObserver.isDisposed)
+                mObserver.onError(e)
         } finally {
             println("Stop writing thread")
         }

@@ -1,9 +1,7 @@
 package ru.quandastudio.lpsclient.socket
 
-import java.io.IOException
 import java.net.Socket
 import java.net.SocketException
-import java.net.SocketTimeoutException
 
 class ReceiverThread(private val mSocket: Socket, private val mObserver: ThreadObserver) : Thread("ReceiverThread") {
 
@@ -18,26 +16,20 @@ class ReceiverThread(private val mSocket: Socket, private val mObserver: ThreadO
                 val line = reader.readLine()
                 val size = line?.substring(5)?.toInt() ?: 0
                 val buffer = CharArray(size)
-
-                reader.read(buffer)
+                var total = 0
+                while (total < size) {
+                    val remaining = size - total
+                    val read = reader.read(buffer, total, remaining)
+                    if (read < 0) break;
+                    total += read
+                }
                 mObserver.onNext(buffer)
             }
-        } catch (e: InterruptedException) {
-            // ThreadObserver should interrupt this thread
-            mObserver.dispose()
-        } catch (e: IOException) {
-            when (e) {
-                is SocketTimeoutException -> {
-                    // Dispose connection by timeout
-                    mObserver.dispose()
-                }
-                is SocketException -> {
-                    // Ignore
-                }
-                else -> mObserver.onError(e)
-            }
-        } catch (e: NullPointerException) {
-            mObserver.onError(e)
+        } catch (e: SocketException) {
+            // Ignore
+        } catch (e: Exception) {
+            if (e !is InterruptedException && !mObserver.isDisposed)
+                mObserver.onError(e)
         } finally {
             println("Stop reading thread")
         }
