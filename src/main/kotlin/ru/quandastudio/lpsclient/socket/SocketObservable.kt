@@ -18,8 +18,6 @@ class SocketObservable(private val host: String, private val port: Int) : Observ
         override fun isDisposed(): Boolean = mSocket.isClosed && !receiverThread.isAlive && !senderThread.isAlive
 
         override fun dispose() {
-            println("Disposing!")
-
             if (!receiverThread.isInterrupted)
                 receiverThread.interrupt()
             if (!senderThread.isInterrupted)
@@ -72,7 +70,6 @@ class SocketObservable(private val host: String, private val port: Int) : Observ
     override fun subscribeActual(observer: Observer<in StatefulData>) {
         this.observer = observer
         observer.onSubscribe(threadObserver)
-        println("Subscribe!")
 
         try {
             if (mSocket.isClosed) {
@@ -84,7 +81,6 @@ class SocketObservable(private val host: String, private val port: Int) : Observ
             val timeout = 15 * 60 * 1000
             mSocket.connect(InetSocketAddress(host, port), timeout)
             mSocket.soTimeout = timeout
-            println("Connected!")
 
             receiverThread.start()
             senderThread.start()

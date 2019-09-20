@@ -9,8 +9,6 @@ class LPSMessageDeserializer : JsonDeserializer<LPSMessage> {
     private val lpsMessages = LPSMessage::class.sealedSubclasses
 
     override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): LPSMessage {
-        println("INPUT: $json")
-
         val action = json.asJsonObject["action"].asString
 
         val clz = lpsMessages.firstOrNull() {
@@ -18,12 +16,10 @@ class LPSMessageDeserializer : JsonDeserializer<LPSMessage> {
             annotation.name.isNotEmpty() && annotation.name == action
         }
 
-        val res: LPSMessage = if (clz != null)
+        return if (clz != null)
             context.deserialize(json, clz.java)
         else
             LPSMessage.LPSUnknownMessage
-        println("RES: $res")
-        return res
     }
 
 }

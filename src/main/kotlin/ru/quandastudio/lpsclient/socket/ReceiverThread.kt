@@ -7,7 +7,6 @@ class ReceiverThread(private val mSocket: Socket, private val mObserver: ThreadO
 
     override fun run() {
         try {
-            println("Start reading thread")
             while (!isInterrupted && mSocket.isConnected) {
                 val reader = mSocket.getInputStream().bufferedReader()
 
@@ -29,8 +28,6 @@ class ReceiverThread(private val mSocket: Socket, private val mObserver: ThreadO
         } catch (e: Exception) {
             if (e !is InterruptedException && !mObserver.isDisposed)
                 mObserver.onError(e)
-        } finally {
-            println("Stop reading thread")
         }
     }
 

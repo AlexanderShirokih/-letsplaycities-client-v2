@@ -16,12 +16,10 @@ class LPSClientMessageDeserializer : JsonDeserializer<LPSClientMessage> {
             annotation.name.isNotEmpty() && annotation.name == action
         }
 
-        val res: LPSClientMessage = if (clz != null)
+        return if (clz != null)
             context.deserialize(json, clz.java)
         else
             LPSClientMessage.LPSLeave("Deserialization error!")
-        println("RES: $res")
-        return res
     }
 
 }

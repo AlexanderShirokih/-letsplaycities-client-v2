@@ -85,13 +85,13 @@ class NetworkRepository(private val mNetworkClient: NetworkClient, private val t
 
     fun connectToFriend(): Maybe<Pair<PlayerData, Boolean>> {
         return networkClient()
-            .takeUntil<LPSMessage.LPSFriendModeRequest> {
-                inputMessage().filter { it is LPSMessage.LPSFriendModeRequest }
-            }
-            .flatMap {
-                inputMessage().filter { it is LPSMessage.LPSPlayMessage }
-                    .cast(LPSMessage.LPSPlayMessage::class.java)
-            }
+            // What is this?
+//            .takeUntil<LPSMessage.LPSFriendModeRequest> {
+//                inputMessage().filter { it is LPSMessage.LPSFriendModeRequest }
+//            }
+            .flatMap { inputMessage() }
+            .filter { it is LPSMessage.LPSPlayMessage }
+            .cast(LPSMessage.LPSPlayMessage::class.java)
             .map { it.getPlayerData() to it.youStarter }
             .firstElement()
     }
@@ -131,11 +131,11 @@ class NetworkRepository(private val mNetworkClient: NetworkClient, private val t
 
     fun disconnect() = mNetworkClient.disconnect()
 
-    fun sendFriendRequestResult(result: Boolean, userId: Int): Completable {
+    fun sendFriendRequestResult(result: Boolean, userId: Int): Observable<NetworkRepository> {
         return networkClient()
             .subscribeOn(Schedulers.io())
             .doOnNext { it.sendFriendRequestResult(result, userId) }
-            .ignoreElements()
+            .map { this }
     }
 
     fun sendWord(city: String) {
