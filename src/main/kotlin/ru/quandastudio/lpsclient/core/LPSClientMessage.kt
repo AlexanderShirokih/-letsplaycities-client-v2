@@ -102,7 +102,7 @@ sealed class LPSClientMessage {
 
     @Action("fm_req_result")
     data class LPSFriendMode(
-        val res: Int,
+        val result: Int,
         val oppUid: Int
     ) : LPSClientMessage()
 

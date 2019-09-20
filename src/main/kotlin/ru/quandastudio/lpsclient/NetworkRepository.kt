@@ -36,7 +36,7 @@ class NetworkRepository(private val mNetworkClient: NetworkClient, private val t
 
     fun getFriendsRequest(): Observable<LPSMessage.FriendRequest> =
         inputMessage().filter { it is LPSMessage.LPSFriendRequest }.cast(LPSMessage.LPSFriendRequest::class.java)
-            .map { it.requestResult }
+            .map { it.result }
 
     fun getFriendsModeRequest(): Observable<LPSMessage.LPSFriendModeRequest> =
         inputMessage().filter { it is LPSMessage.LPSFriendModeRequest }.cast(LPSMessage.LPSFriendModeRequest::class.java)
@@ -129,11 +129,7 @@ class NetworkRepository(private val mNetworkClient: NetworkClient, private val t
             .ignoreElements()
     }
 
-    fun disconnect() {
-        Completable.fromRunnable(mNetworkClient::disconnect)
-            .subscribeOn(Schedulers.io())
-            .subscribe()
-    }
+    fun disconnect() = mNetworkClient.disconnect()
 
     fun sendFriendRequestResult(result: Boolean, userId: Int): Completable {
         return networkClient()

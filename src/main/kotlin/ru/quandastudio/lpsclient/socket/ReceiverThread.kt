@@ -9,7 +9,6 @@ class ReceiverThread(private val mSocket: Socket, private val mObserver: ThreadO
         try {
             println("Start reading thread")
             while (!isInterrupted && mSocket.isConnected) {
-                println("Entering reading loop.")
                 val reader = mSocket.getInputStream().bufferedReader()
 
                 //size:[sizeInBytes][data]

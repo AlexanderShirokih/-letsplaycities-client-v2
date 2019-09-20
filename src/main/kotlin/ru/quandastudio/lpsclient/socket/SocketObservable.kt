@@ -75,7 +75,6 @@ class SocketObservable(private val host: String, private val port: Int) : Observ
         println("Subscribe!")
 
         try {
-
             if (mSocket.isClosed) {
                 if (!threadObserver.isDisposed)
                     threadObserver.dispose()
@@ -110,7 +109,6 @@ class SocketObservable(private val host: String, private val port: Int) : Observ
     }
 
     fun sendData(data: CharArray) {
-        println("sendData: ${String(data)}")
         if (mSocket.isConnected)
             senderThread.send(data)
     }

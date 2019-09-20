@@ -25,7 +25,6 @@ class NetworkClient constructor(
     private val mSocket = SocketObservable(host, port)
     private val mSharedSocket: Observable<LPSMessage> = mSocket
         .doOnError {
-            println("Error catched: $it")
             it.printStackTrace()
         }
         .map {
@@ -36,7 +35,7 @@ class NetworkClient constructor(
             }
         }
         .subscribeOn(Schedulers.io())
-        .publish().refCount(7, TimeUnit.SECONDS)
+        .publish().refCount(3, TimeUnit.SECONDS)
 
     class AuthResult(
         val authData: AuthData,
@@ -160,7 +159,7 @@ class NetworkClient constructor(
     fun sendFriendRequestResult(accepted: Boolean, userId: Int) {
         sendMessage(
             LPSClientMessage.LPSFriendMode(
-                res = if (accepted) 1 else 2,
+                result = if (accepted) 1 else 2,
                 oppUid = userId
             )
         )

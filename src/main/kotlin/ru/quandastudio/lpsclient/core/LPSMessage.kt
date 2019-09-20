@@ -90,7 +90,7 @@ sealed class LPSMessage {
 
     @Action("friend_request")
     data class LPSFriendRequest(
-        val requestResult: FriendRequest
+        val result: FriendRequest
     ) : LPSMessage()
 
     @Action("timeout")
