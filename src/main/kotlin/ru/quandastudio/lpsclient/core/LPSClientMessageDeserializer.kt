@@ -9,7 +9,7 @@ class LPSClientMessageDeserializer : JsonDeserializer<LPSClientMessage> {
     private val lpsMessages = LPSClientMessage::class.sealedSubclasses
 
     override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): LPSClientMessage {
-        val action = json.asJsonObject["action"].asString
+        val action = json.asJsonObject.takeIf { it.has("action") }?.get("action")?.asString
 
         val clz = lpsMessages.firstOrNull() {
             val annotation = (it.annotations.first { a -> a is Action } as Action)
