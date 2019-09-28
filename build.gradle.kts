@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "ru.quandastudio.lps"
-version = "0.2.0"
+version = "0.2.1"
 
 val sourcesJar by tasks.register<Jar>("sourcesJar") {
     archiveClassifier.set("sources")
@@ -34,6 +34,6 @@ dependencies {
     implementation("com.google.code.gson:gson:2.8.5")
     implementation("io.reactivex.rxjava2:rxkotlin:2.4.0")
     implementation(kotlin("stdlib-jdk8"))
+    implementation(kotlin("reflect"))
     testImplementation("junit:junit:4.12")
-    compile(kotlin("reflect"))
 }

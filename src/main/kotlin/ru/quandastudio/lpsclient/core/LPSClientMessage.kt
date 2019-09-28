@@ -5,7 +5,7 @@ import ru.quandastudio.lpsclient.model.AuthType
 import ru.quandastudio.lpsclient.model.PlayerData
 import ru.quandastudio.lpsclient.core.Base64Ext.decodeBase64
 
-sealed class LPSClientMessage {
+open class LPSClientMessage {
     val action: String = (this::class.annotations.first { it is Action } as Action).name
 
     @Action("login")

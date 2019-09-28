@@ -5,7 +5,7 @@ import ru.quandastudio.lpsclient.model.*
 import ru.quandastudio.lpsclient.core.Base64Ext.decodeBase64
 import ru.quandastudio.lpsclient.core.Base64Ext.encodeBase64
 
-sealed class LPSMessage {
+open class LPSMessage {
     val action: String = (this::class.annotations.first { it is Action } as Action).name
 
     @Action("logged_in")
