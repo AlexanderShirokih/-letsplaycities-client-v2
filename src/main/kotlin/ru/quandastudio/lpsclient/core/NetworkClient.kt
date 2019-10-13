@@ -52,7 +52,10 @@ class NetworkClient constructor(
 
     private fun requireConnection(): SocketObservable {
         if (!mSocket.isConnected()) {
-            throw LPSException("requireConnection() called, socket is not connected")
+            throw LPSException(
+                "requireConnection() called, socket is not connected",
+                LPSException.LPSErrType.CONNECTION_ERROR
+            )
         }
         return mSocket
     }
@@ -163,6 +166,10 @@ class NetworkClient constructor(
                 oppUid = userId
             )
         )
+    }
+
+    fun sendAdminCommand(command: String) {
+        sendMessage(LPSClientMessage.LPSAdmin(command))
     }
 
 }

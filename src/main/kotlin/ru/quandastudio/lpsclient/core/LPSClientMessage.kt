@@ -106,6 +106,11 @@ open class LPSClientMessage {
         val oppUid: Int
     ) : LPSClientMessage()
 
+    @Action("admin")
+    data class LPSAdmin(
+        val command: String
+    ) : LPSClientMessage()
+
     @Action("leave")
     data class LPSLeave(val reason: String? = null) : LPSClientMessage()
 }

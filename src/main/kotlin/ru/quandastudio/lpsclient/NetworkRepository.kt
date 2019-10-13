@@ -13,7 +13,11 @@ import ru.quandastudio.lpsclient.model.FriendInfo
 import ru.quandastudio.lpsclient.model.PlayerData
 import java.util.concurrent.TimeUnit
 
-class NetworkRepository(private val mNetworkClient: NetworkClient, private val token: Single<String>) {
+class NetworkRepository(
+    private val mNetworkClient: NetworkClient,
+    private val token: Single<String>,
+    private val errListener: ErrorListener
+) {
 
     private val disposable = CompositeDisposable()
 
@@ -139,25 +143,39 @@ class NetworkRepository(private val mNetworkClient: NetworkClient, private val t
     }
 
     fun sendWord(city: String) {
-        disposable.add(networkClient()
-            .subscribe { client -> client.sendWord(city) })
+        disposable.add(
+            networkClient()
+                .subscribe({ client ->
+                    client.sendWord(city)
+                }, ::handleError)
+        )
     }
 
     fun sendMessage(message: String) {
-        disposable.add(networkClient()
-            .subscribe { client -> client.sendMessage(message) })
+        disposable.add(
+            networkClient()
+                .subscribe({ client -> client.sendMessage(message) }, ::handleError)
+        )
+    }
+
+    fun sendAdminCommand(command: String) {
+        disposable.add(networkClient().subscribe({ client -> client.sendAdminCommand(command) }, ::handleError))
     }
 
     fun sendFriendRequest() {
-        disposable.add(networkClient().subscribe { client -> client.sendFriendRequest() })
+        disposable.add(networkClient().subscribe({ client -> client.sendFriendRequest() }, ::handleError))
     }
 
     fun sendFriendAcceptance(accepted: Boolean) {
-        disposable.add(networkClient().subscribe { client -> client.sendFriendAcceptance(accepted) })
+        disposable.add(networkClient().subscribe({ client -> client.sendFriendAcceptance(accepted) }, ::handleError))
     }
 
     fun banUser(userId: Int) {
-        disposable.add(networkClient().subscribe { client -> client.banUser(userId) })
+        disposable.add(networkClient().subscribe({ client -> client.banUser(userId) }, ::handleError))
+    }
+
+    private fun handleError(t: Throwable) {
+        if (t is LPSException) errListener.onError(t)
     }
 
 }

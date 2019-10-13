@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "ru.quandastudio.lps"
-version = "0.2.1"
+version = "0.2.3"
 
 val sourcesJar by tasks.register<Jar>("sourcesJar") {
     archiveClassifier.set("sources")
