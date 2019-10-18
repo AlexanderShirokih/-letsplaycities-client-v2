@@ -4,7 +4,6 @@ import io.reactivex.Completable
 import io.reactivex.Maybe
 import io.reactivex.Observable
 import io.reactivex.Single
-import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import ru.quandastudio.lpsclient.core.LPSMessage
 import ru.quandastudio.lpsclient.core.NetworkClient
@@ -15,11 +14,8 @@ import java.util.concurrent.TimeUnit
 
 class NetworkRepository(
     private val mNetworkClient: NetworkClient,
-    private val token: Single<String>,
-    private val errListener: ErrorListener
+    private val token: Single<String>
 ) {
-
-    private val disposable = CompositeDisposable()
 
     private fun inputMessage(): Observable<LPSMessage> = mNetworkClient.getMessages()
 
@@ -142,40 +138,32 @@ class NetworkRepository(
             .map { this }
     }
 
-    fun sendWord(city: String) {
-        disposable.add(
-            networkClient()
-                .subscribe({ client ->
-                    client.sendWord(city)
-                }, ::handleError)
-        )
+    fun sendWord(city: String): Completable {
+        return networkClient()
+            .doOnNext { client ->
+                client.sendWord(city)
+            }
+            .ignoreElements()
     }
 
-    fun sendMessage(message: String) {
-        disposable.add(
-            networkClient()
-                .subscribe({ client -> client.sendMessage(message) }, ::handleError)
-        )
+    fun sendMessage(message: String): Completable {
+        return networkClient().doOnNext { client -> client.sendMessage(message) }.ignoreElements()
     }
 
-    fun sendAdminCommand(command: String) {
-        disposable.add(networkClient().subscribe({ client -> client.sendAdminCommand(command) }, ::handleError))
+    fun sendAdminCommand(command: String): Completable {
+        return networkClient().doOnNext { client -> client.sendAdminCommand(command) }.ignoreElements()
     }
 
-    fun sendFriendRequest() {
-        disposable.add(networkClient().subscribe({ client -> client.sendFriendRequest() }, ::handleError))
+    fun sendFriendRequest(): Completable {
+        return networkClient().doOnNext { client -> client.sendFriendRequest() }.ignoreElements()
     }
 
-    fun sendFriendAcceptance(accepted: Boolean) {
-        disposable.add(networkClient().subscribe({ client -> client.sendFriendAcceptance(accepted) }, ::handleError))
+    fun sendFriendAcceptance(accepted: Boolean): Completable {
+        return networkClient().doOnNext { client -> client.sendFriendAcceptance(accepted) }.ignoreElements()
     }
 
-    fun banUser(userId: Int) {
-        disposable.add(networkClient().subscribe({ client -> client.banUser(userId) }, ::handleError))
-    }
-
-    private fun handleError(t: Throwable) {
-        if (t is LPSException) errListener.onError(t)
+    fun banUser(userId: Int): Completable {
+        return networkClient().doOnNext { client -> client.banUser(userId) }.ignoreElements()
     }
 
 }
