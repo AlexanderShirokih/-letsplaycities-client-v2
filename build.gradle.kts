@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "ru.quandastudio.lps"
-version = "0.2.3"
+version = "0.3.0"
 
 val sourcesJar by tasks.register<Jar>("sourcesJar") {
     archiveClassifier.set("sources")
@@ -31,6 +31,7 @@ repositories {
 }
 
 dependencies {
+    implementation("tech.gusavila92:java-android-websocket-client:1.2.2")
     implementation("com.google.code.gson:gson:2.8.5")
     implementation("io.reactivex.rxjava2:rxkotlin:2.4.0")
     implementation(kotlin("stdlib-jdk8"))

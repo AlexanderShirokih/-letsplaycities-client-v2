@@ -8,21 +8,34 @@ import ru.quandastudio.lpsclient.LPSException
 import ru.quandastudio.lpsclient.model.AuthData
 import ru.quandastudio.lpsclient.model.PlayerData
 import ru.quandastudio.lpsclient.socket.SocketObservable
+import ru.quandastudio.lpsclient.socket.PureSocketObservable
+import ru.quandastudio.lpsclient.socket.WebSocketObservable
 import java.util.concurrent.TimeUnit
 
 class NetworkClient constructor(
     private val base64Provider: Base64Provider,
     val isLocal: Boolean,
+    connectionType: ConnectionType,
     host: String,
     port: Int = 62964
 ) {
+    enum class ConnectionType {
+        PureSocket, WebSocket;
+
+        fun createSocketObservable(host: String, port: Int): SocketObservable {
+            return when (this) {
+                PureSocket -> PureSocketObservable(host, port)
+                WebSocket -> WebSocketObservable(host, port)
+            }
+        }
+    }
 
     init {
         Base64Ext.installBase64(base64Provider)
     }
 
     private val json = JsonMessage()
-    private val mSocket = SocketObservable(host, port)
+    private val mSocket = connectionType.createSocketObservable(host, port)
     private val mSharedSocket: Observable<LPSMessage> = mSocket
         .doOnError {
             it.printStackTrace()

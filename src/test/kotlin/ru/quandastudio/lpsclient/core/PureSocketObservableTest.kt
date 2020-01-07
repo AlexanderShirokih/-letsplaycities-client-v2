@@ -2,28 +2,29 @@ package ru.quandastudio.lpsclient.core
 
 import org.junit.Test
 import ru.quandastudio.lpsclient.socket.SocketObservable
+import ru.quandastudio.lpsclient.socket.PureSocketObservable
 import java.net.UnknownHostException
 
-class SocketObservableTest {
+class PureSocketObservableTest {
 
 
     @Test
     fun testThrowUnknownHostException() {
-        SocketObservable("ttt", 62964)
+        PureSocketObservable("ttt", 62964)
             .test()
             .assertError(UnknownHostException::class.java)
     }
 
     @Test
     fun testConnection() {
-        SocketObservable("localhost", 62964)
+        PureSocketObservable("localhost", 62964)
             .test()
             .assertValue { it.state == SocketObservable.State.CONNECTED }
     }
 
     @Test
     fun testSendData() {
-        SocketObservable("localhost", 62964)
+        PureSocketObservable("localhost", 62964)
             .filter { it.state == SocketObservable.State.CONNECTED }
             .doOnNext {
                 it.sendResponse(
