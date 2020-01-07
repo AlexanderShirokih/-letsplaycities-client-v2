@@ -2,6 +2,7 @@ package ru.quandastudio.lpsclient.socket
 
 import io.reactivex.Observable
 import io.reactivex.Observer
+import io.reactivex.disposables.Disposable
 
 abstract class SocketObservable(private val host: String, private val port: Int) :
     Observable<SocketObservable.StatefulData>() {
@@ -18,7 +19,9 @@ abstract class SocketObservable(private val host: String, private val port: Int)
 
     abstract fun sendData(data: CharArray)
 
-    abstract fun isConnected() : Boolean
+    abstract fun getDisposableSubscriber(): Disposable
 
-    abstract fun dispose()
+    fun isConnected(): Boolean = !getDisposableSubscriber().isDisposed
+
+    fun disconnect() = getDisposableSubscriber().dispose()
 }

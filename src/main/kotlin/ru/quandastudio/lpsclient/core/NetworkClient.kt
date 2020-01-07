@@ -16,16 +16,15 @@ class NetworkClient constructor(
     private val base64Provider: Base64Provider,
     val isLocal: Boolean,
     connectionType: ConnectionType,
-    host: String,
-    port: Int = 62964
+    host: String
 ) {
     enum class ConnectionType {
         PureSocket, WebSocket;
 
-        fun createSocketObservable(host: String, port: Int): SocketObservable {
+        fun createSocketObservable(host: String): SocketObservable {
             return when (this) {
-                PureSocket -> PureSocketObservable(host, port)
-                WebSocket -> WebSocketObservable(host, port)
+                PureSocket -> PureSocketObservable(host)
+                WebSocket -> WebSocketObservable(host)
             }
         }
     }
@@ -35,7 +34,7 @@ class NetworkClient constructor(
     }
 
     private val json = JsonMessage()
-    private val mSocket = connectionType.createSocketObservable(host, port)
+    private val mSocket = connectionType.createSocketObservable(host)
     private val mSharedSocket: Observable<LPSMessage> = mSocket
         .doOnError {
             it.printStackTrace()
@@ -61,7 +60,7 @@ class NetworkClient constructor(
             .map { this@NetworkClient }
     }
 
-    fun disconnect() = mSocket.dispose()
+    fun disconnect() = mSocket.disconnect()
 
     private fun requireConnection(): SocketObservable {
         if (!mSocket.isConnected()) {

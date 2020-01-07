@@ -1,11 +1,12 @@
 package ru.quandastudio.lpsclient.socket
 
 import io.reactivex.Observer
+import io.reactivex.disposables.Disposable
 import java.io.IOException
 import java.net.InetSocketAddress
 import java.net.Socket
 
-class PureSocketObservable(host: String, port: Int) : SocketObservable(host, port) {
+class PureSocketObservable(host: String, port: Int = 62964) : SocketObservable(host, port) {
 
     private inner class SocketObserver : ThreadObserver {
         override fun isDisposed(): Boolean = mSocket.isClosed && !receiverThread.isAlive && !senderThread.isAlive
@@ -102,7 +103,5 @@ class PureSocketObservable(host: String, port: Int) : SocketObservable(host, por
             senderThread.send(data)
     }
 
-    override fun isConnected() = !threadObserver.isDisposed
-
-    override fun dispose() = threadObserver.dispose()
+    override fun getDisposableSubscriber(): Disposable = threadObserver
 }
