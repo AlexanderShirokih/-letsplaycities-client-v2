@@ -6,7 +6,7 @@ import tech.gusavila92.websocketclient.WebSocketClient
 import java.lang.Exception
 import java.net.URI
 
-class WebSocketObservable(host: String, port: Int = 8080) : SocketObservable(host, port), Disposable {
+class WebSocketObservable(host: String, port: Int) : SocketObservable(host, port), Disposable {
 
     private var webSocketClient: WebSocketClient? = null
 

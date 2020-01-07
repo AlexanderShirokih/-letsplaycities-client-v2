@@ -6,7 +6,7 @@ import java.io.IOException
 import java.net.InetSocketAddress
 import java.net.Socket
 
-class PureSocketObservable(host: String, port: Int = 62964) : SocketObservable(host, port) {
+class PureSocketObservable(host: String, port: Int) : SocketObservable(host, port) {
 
     private inner class SocketObserver : ThreadObserver {
         override fun isDisposed(): Boolean = mSocket.isClosed && !receiverThread.isAlive && !senderThread.isAlive
