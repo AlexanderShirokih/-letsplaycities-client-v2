@@ -47,17 +47,9 @@ class WebSocketObservable(host: String, port: Int) : SocketObservable(host, port
                 )
             }
 
-            override fun onBinaryReceived(data: ByteArray?) {
-                println("Binary!")
-            }
-
-            override fun onPongReceived(data: ByteArray?) {
-                println("Pong!")
-            }
-
-            override fun onPingReceived(data: ByteArray?) {
-                println("Ping!")
-            }
+            override fun onBinaryReceived(data: ByteArray?) = Unit
+            override fun onPongReceived(data: ByteArray?) = Unit
+            override fun onPingReceived(data: ByteArray?) = Unit
 
             override fun onException(e: Exception) {
                 onCloseReceived()
