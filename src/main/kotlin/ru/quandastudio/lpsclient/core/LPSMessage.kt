@@ -79,6 +79,9 @@ open class LPSMessage {
     @Action("friends")
     data class LPSFriendsList(val data: ArrayList<FriendInfo>) : LPSMessage()
 
+    @Action("history")
+    data class LPSHistoryList(val data: List<HistoryInfo>) : LPSMessage()
+
     @Action("fm_request")
     data class LPSFriendModeRequest(
         val login: String? = null,
@@ -90,7 +93,9 @@ open class LPSMessage {
 
     @Action("friend_request")
     data class LPSFriendRequest(
-        val result: FriendRequest
+        val result: FriendRequest,
+        val uid: Int,
+        val login: String
     ) : LPSMessage()
 
     @Action("timeout")

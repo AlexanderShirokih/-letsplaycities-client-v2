@@ -128,6 +128,10 @@ class NetworkClient constructor(
         sendMessage(LPSClientMessage.LPSFriendList)
     }
 
+    fun requestHistory() {
+        sendMessage(LPSClientMessage.LPSHistoryList)
+    }
+
     fun deleteFriend(userId: Int) {
         sendMessage(
             LPSClientMessage.LPSFriendAction(

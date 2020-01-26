@@ -70,6 +70,9 @@ open class LPSClientMessage {
     @Action("friends_list")
     object LPSFriendList : LPSClientMessage()
 
+    @Action("history")
+    object LPSHistoryList: LPSClientMessage()
+
     enum class RequestType {
         QUERY_LIST,
         SEND,

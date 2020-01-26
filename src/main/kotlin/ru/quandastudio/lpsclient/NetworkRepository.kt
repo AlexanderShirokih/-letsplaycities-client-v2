@@ -9,6 +9,7 @@ import ru.quandastudio.lpsclient.core.LPSMessage
 import ru.quandastudio.lpsclient.core.NetworkClient
 import ru.quandastudio.lpsclient.model.BlackListItem
 import ru.quandastudio.lpsclient.model.FriendInfo
+import ru.quandastudio.lpsclient.model.HistoryInfo
 import ru.quandastudio.lpsclient.model.PlayerData
 import java.util.concurrent.TimeUnit
 
@@ -112,6 +113,16 @@ class NetworkRepository(
             .doOnNext { t -> t.requestFriendsList() }
             .flatMap {
                 inputMessage().filter { it is LPSMessage.LPSFriendsList }.cast(LPSMessage.LPSFriendsList::class.java)
+            }
+            .firstOrError()
+            .map { it.data }
+    }
+
+    fun getHistory(): Single<List<HistoryInfo>> {
+        return networkClient()
+            .doOnNext { t -> t.requestHistory() }
+            .flatMap {
+                inputMessage().filter { it is LPSMessage.LPSHistoryList }.cast(LPSMessage.LPSHistoryList::class.java)
             }
             .firstOrError()
             .map { it.data }
