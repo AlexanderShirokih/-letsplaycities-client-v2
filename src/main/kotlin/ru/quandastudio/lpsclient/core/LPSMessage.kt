@@ -77,10 +77,14 @@ open class LPSMessage {
     data class LPSBannedListMessage(val data: List<BlackListItem>) : LPSMessage()
 
     @Action("friends")
-    data class LPSFriendsList(val data: ArrayList<FriendInfo>) : LPSMessage()
+    data class LPSFriendsList(
+        val data: ArrayList<FriendInfo>
+    ) : LPSMessage()
 
     @Action("history")
-    data class LPSHistoryList(val data: List<HistoryInfo>) : LPSMessage()
+    data class LPSHistoryList(
+        val data: List<HistoryInfo>
+    ) : LPSMessage()
 
     @Action("fm_request")
     data class LPSFriendModeRequest(
