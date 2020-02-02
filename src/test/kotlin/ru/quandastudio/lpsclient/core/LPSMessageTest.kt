@@ -17,6 +17,6 @@ class LPSMessageTest {
         val output = Gson().fromJson(input, LPSMessage.LPSFriendsList::class.java)
 
         assertEquals(output.data.size, 3)
-        assertEquals(output.data[0], FriendInfo(17873, "Test", true))
+        assertEquals(output.data[0], FriendInfo(17873, "Test", true, ""))
     }
 }

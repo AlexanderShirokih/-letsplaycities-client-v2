@@ -52,8 +52,10 @@ class WebSocketObservable(host: String, port: Int) : SocketObservable(host, port
             override fun onPingReceived(data: ByteArray?) = Unit
 
             override fun onException(e: Exception) {
-                onCloseReceived()
-                observer.onError(e)
+                if (isRunning) {
+                    onCloseReceived()
+                    observer.onError(e)
+                }
             }
 
             override fun onCloseReceived() {
@@ -68,8 +70,6 @@ class WebSocketObservable(host: String, port: Int) : SocketObservable(host, port
             }
         }.apply {
             setConnectTimeout(10000)
-            setReadTimeout(120000)
-            enableAutomaticReconnection(5000)
             connect()
         }
         isRunning = true
