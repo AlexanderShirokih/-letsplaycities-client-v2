@@ -10,8 +10,7 @@ plugins {
 group = "ru.quandastudio.lps"
 version = "0.3.3"
 
-project.version = version
-project.group = group
+val artifactName = "lps-client"
 
 dependencies {
     implementation("ru.aleshi:java-android-websocket-client:1.2.3")
@@ -55,7 +54,7 @@ val publicationName = "lpsClientLibrary"
 publishing {
     publications {
         create<MavenPublication>("lpsClientLibrary") {
-            artifactId = "lps-client"
+            artifactId = artifactName
             groupId = "ru.aleshi.lps"
             version = project.version.toString()
             from(components["java"])
@@ -72,7 +71,7 @@ bintray {
     setPublications(publicationName)
     pkg(delegateClosureOf<com.jfrog.bintray.gradle.BintrayExtension.PackageConfig> {
         repo = "maven"
-        name = "lps-client"
+        name = artifactName
         desc = "API client for Letsplaycities game"
         githubRepo = "AlexanderShirokih/letsplaycities-client-v2"
         vcsUrl = "https://github.com/AlexanderShirokih/letsplaycities-client-v2"
