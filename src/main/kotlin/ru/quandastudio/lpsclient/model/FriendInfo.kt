@@ -4,5 +4,6 @@ data class FriendInfo(
     var userId: Int,
     var login: String,
     var accepted: Boolean,
-    val pictureHash: String
+    @Deprecated(message = "Deprecated param, will be removed in future releases")
+    val pictureHash: String?
 )
