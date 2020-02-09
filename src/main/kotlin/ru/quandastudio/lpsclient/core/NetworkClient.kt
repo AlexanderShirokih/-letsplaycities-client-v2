@@ -54,7 +54,7 @@ class NetworkClient constructor(
     class AuthResult(
         val authData: AuthData,
         val newerBuild: Int,
-        val picHash: String
+        val picHash: String?
     )
 
     fun connect(): Observable<NetworkClient> {
