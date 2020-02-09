@@ -6,8 +6,7 @@ data class PlayerData(
     var clientBuild: Int = 80,
     var canReceiveMessages: Boolean = false,
     var allowSendUID: Boolean = false,
-    var isFriend: Boolean = false,
-    var avatar: ByteArray? = null
+    var isFriend: Boolean = false
 ) {
 
     override fun toString(): String {
@@ -16,7 +15,6 @@ data class PlayerData(
                 "clientBuild=$clientBuild, " +
                 "canReceiveMessages=$canReceiveMessages, " +
                 "allowSendUID=$allowSendUID, " +
-                "avatar=${(if (avatar == null) "no" else "yes")}, " +
                 "authData=$authData}"
     }
 
@@ -32,9 +30,6 @@ data class PlayerData(
         if (canReceiveMessages != other.canReceiveMessages) return false
         if (allowSendUID != other.allowSendUID) return false
         if (isFriend != other.isFriend) return false
-        if (avatar != null) {
-            if (other.avatar == null) return false
-        } else if (other.avatar != null) return false
 
         return true
     }
@@ -46,7 +41,6 @@ data class PlayerData(
         result = 31 * result + canReceiveMessages.hashCode()
         result = 31 * result + allowSendUID.hashCode()
         result = 31 * result + isFriend.hashCode()
-        result = 31 * result + (avatar?.contentHashCode() ?: 0)
         return result
     }
 

@@ -3,7 +3,6 @@ package ru.quandastudio.lpsclient.core
 import ru.quandastudio.lpsclient.model.AuthData
 import ru.quandastudio.lpsclient.model.AuthType
 import ru.quandastudio.lpsclient.model.PlayerData
-import ru.quandastudio.lpsclient.core.Base64Ext.decodeBase64
 
 open class LPSClientMessage {
     val action: String = (this::class.annotations.first { it is Action } as Action).name
@@ -21,10 +20,9 @@ open class LPSClientMessage {
         val allowSendUID: Boolean,
         val firebaseToken: String,
         val uid: Int?,
-        val hash: String?,
-        val avatar: String?
+        val hash: String?
     ) : LPSClientMessage() {
-        constructor(pd: PlayerData, fbToken: String, userId: Int?, hash: String?, avatar: String?) : this(
+        constructor(pd: PlayerData, fbToken: String, userId: Int?, hash: String?) : this(
             version = 4,
             login = pd.authData.login,
             accToken = pd.authData.accessToken,
@@ -36,8 +34,7 @@ open class LPSClientMessage {
             allowSendUID = pd.allowSendUID,
             firebaseToken = fbToken,
             uid = userId,
-            hash = hash,
-            avatar = avatar
+            hash = hash
         )
 
         fun getPlayerData(): PlayerData =
@@ -46,9 +43,15 @@ open class LPSClientMessage {
                     pd.canReceiveMessages = canReceiveMessages
                     pd.clientVersion = clientVersion
                     pd.clientBuild = clientBuild
-                    pd.avatar = avatar?.decodeBase64()
                 }
     }
+
+    @Action("avatar")
+    data class LPSAvatar(
+        val type: RequestType,
+        val avatar: String?,
+        val hash: String?
+    ) : LPSClientMessage()
 
     enum class PlayMode {
         RANDOM_PAIR,
@@ -71,7 +74,7 @@ open class LPSClientMessage {
     object LPSFriendList : LPSClientMessage()
 
     @Action("history")
-    object LPSHistoryList: LPSClientMessage()
+    object LPSHistoryList : LPSClientMessage()
 
     enum class RequestType {
         QUERY_LIST,

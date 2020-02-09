@@ -6,6 +6,5 @@ data class HistoryInfo(
     val isFriend: Boolean,
     val startTime: Long,
     val duration: Int,
-    val wordsCount: Int,
-    val pictureHash: String
+    val wordsCount: Int
 )

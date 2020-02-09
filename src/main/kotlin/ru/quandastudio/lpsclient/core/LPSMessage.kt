@@ -1,9 +1,6 @@
 package ru.quandastudio.lpsclient.core
 
-import kotlin.collections.ArrayList
 import ru.quandastudio.lpsclient.model.*
-import ru.quandastudio.lpsclient.core.Base64Ext.decodeBase64
-import ru.quandastudio.lpsclient.core.Base64Ext.encodeBase64
 
 open class LPSMessage {
     val action: String = (this::class.annotations.first { it is Action } as Action).name
@@ -12,7 +9,8 @@ open class LPSMessage {
     data class LPSLoggedIn(
         val userId: Int,
         val accHash: String,
-        val newerBuild: Int
+        val newerBuild: Int,
+        val picHash: String
     ) : LPSMessage()
 
     @Action("login_error")
@@ -25,7 +23,6 @@ open class LPSMessage {
     data class LPSPlayMessage(
         val canReceiveMessages: Boolean,
         val login: String,
-        var avatar: String? = null,
         var oppUid: Int,
         var clientVersion: String,
         var clientBuild: Int,
@@ -38,18 +35,12 @@ open class LPSMessage {
 
         fun getPlayerData() = PlayerData(
             AuthData(login, snUID ?: "", authType ?: AuthType.Native, "", userID = oppUid),
-            avatar = avatar?.decodeBase64(),
             canReceiveMessages = canReceiveMessages,
             clientVersion = clientVersion,
             clientBuild = clientBuild,
             isFriend = isFriend,
             allowSendUID = true
         )
-
-        fun setAvatar(data: ByteArray?): LPSPlayMessage {
-            avatar = data?.encodeBase64()
-            return this
-        }
     }
 
     @Action("word")
