@@ -55,10 +55,10 @@ class NetworkRepository(
         Observable.just(mNetworkClient)
             .subscribeOn(Schedulers.io())
 
-    fun login(userData: PlayerData, avatar: ByteArray?): Observable<NetworkClient.AuthResult> {
+    fun login(userData: PlayerData, avatarState: NetworkClient.AvatarState): Observable<NetworkClient.AuthResult> {
         return networkClient()
             .flatMap { it.connect() }
-            .flatMapMaybe { it.login(userData, avatar, token.blockingGet()) }
+            .flatMapMaybe { it.login(userData, avatarState, token.blockingGet()) }
     }
 
     class BannedPlayerException : Exception()

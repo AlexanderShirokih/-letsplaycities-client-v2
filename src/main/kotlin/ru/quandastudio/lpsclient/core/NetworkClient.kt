@@ -81,7 +81,16 @@ class NetworkClient constructor(
 
     private fun ByteArray.toBase64(): String = base64Provider.encode(this)
 
-    fun login(userData: PlayerData, avatarData: ByteArray?, fbToken: String): Maybe<AuthResult> {
+    sealed class AvatarState {
+
+        object NoAvatar : AvatarState()
+
+        object DeleteAvatar : AvatarState()
+
+        class PresentAvatar(val data: ByteArray) : AvatarState()
+    }
+
+    fun login(userData: PlayerData, avatarState: AvatarState, fbToken: String): Maybe<AuthResult> {
         val ad = userData.authData
         return Observable
             .fromCallable {
@@ -110,16 +119,19 @@ class NetworkClient constructor(
                 }
             }
             .doOnSuccess { authResult ->
-                val hasAvatar = avatarData != null
-                if (hasAvatar) {
-                    val hash = avatarData!!.toBase64()
-                    val md5 = Utils.md5(hash)
-                    if (md5 != authResult.picHash) {
-                        val msg = LPSClientMessage.LPSAvatar(LPSClientMessage.RequestType.SEND, hash, md5)
-                        sendMessage(msg)
+                when (avatarState) {
+                    is AvatarState.PresentAvatar -> {
+                        val hash = avatarState.data.toBase64()
+                        val md5 = Utils.md5(hash)
+                        if (md5 != authResult.picHash) {
+                            val msg = LPSClientMessage.LPSAvatar(LPSClientMessage.RequestType.SEND, hash, md5)
+                            sendMessage(msg)
+                        }
                     }
-                } else
-                    sendMessage(LPSClientMessage.LPSAvatar(LPSClientMessage.RequestType.DELETE, null, null))
+                    is AvatarState.DeleteAvatar ->
+                        sendMessage(LPSClientMessage.LPSAvatar(LPSClientMessage.RequestType.DELETE, null, null))
+                    is AvatarState.NoAvatar -> Unit
+                }
             }
     }
 
