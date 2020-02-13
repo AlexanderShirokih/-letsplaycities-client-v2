@@ -144,19 +144,6 @@ class NetworkClient constructor(
         )
     }
 
-
-    fun requestBlackList() {
-        sendMessage(LPSClientMessage.LPSBanList(LPSClientMessage.RequestType.QUERY_LIST))
-    }
-
-    fun requestFriendsList() {
-        sendMessage(LPSClientMessage.LPSFriendList)
-    }
-
-    fun requestHistory() {
-        sendMessage(LPSClientMessage.LPSHistoryList)
-    }
-
     fun deleteFriend(userId: Int) {
         sendMessage(
             LPSClientMessage.LPSFriendAction(

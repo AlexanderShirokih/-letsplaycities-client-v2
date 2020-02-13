@@ -7,9 +7,6 @@ import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 import ru.quandastudio.lpsclient.core.LPSMessage
 import ru.quandastudio.lpsclient.core.NetworkClient
-import ru.quandastudio.lpsclient.model.BlackListItem
-import ru.quandastudio.lpsclient.model.FriendInfo
-import ru.quandastudio.lpsclient.model.HistoryInfo
 import ru.quandastudio.lpsclient.model.PlayerData
 import java.util.concurrent.TimeUnit
 
@@ -95,37 +92,6 @@ class NetworkRepository(
             .cast(LPSMessage.LPSPlayMessage::class.java)
             .map { it.getPlayerData() to it.youStarter }
             .firstElement()
-    }
-
-    fun getBlackList(): Single<List<BlackListItem>> {
-        return networkClient()
-            .doOnNext { t -> t.requestBlackList() }
-            .flatMap {
-                inputMessage().filter { it is LPSMessage.LPSBannedListMessage }
-                    .cast(LPSMessage.LPSBannedListMessage::class.java)
-            }
-            .firstOrError()
-            .map { it.data }
-    }
-
-    fun getFriendsList(): Single<ArrayList<FriendInfo>> {
-        return networkClient()
-            .doOnNext { t -> t.requestFriendsList() }
-            .flatMap {
-                inputMessage().filter { it is LPSMessage.LPSFriendsList }.cast(LPSMessage.LPSFriendsList::class.java)
-            }
-            .firstOrError()
-            .map { it.data }
-    }
-
-    fun getHistory(): Single<List<HistoryInfo>> {
-        return networkClient()
-            .doOnNext { t -> t.requestHistory() }
-            .flatMap {
-                inputMessage().filter { it is LPSMessage.LPSHistoryList }.cast(LPSMessage.LPSHistoryList::class.java)
-            }
-            .firstOrError()
-            .map { it.data }
     }
 
     fun deleteFriend(userId: Int): Completable {

@@ -1,10 +1,5 @@
 package ru.quandastudio.lpsclient
 
-import io.reactivex.Single
-import io.reactivex.schedulers.Schedulers
-import org.junit.Test
-import ru.quandastudio.lpsclient.core.Base64JDK8Impl
-import ru.quandastudio.lpsclient.core.NetworkClient
 import ru.quandastudio.lpsclient.model.PlayerData
 
 internal class NetworkRepositoryTest {
@@ -27,13 +22,7 @@ internal class NetworkRepositoryTest {
 //    }
 
     private fun createPlayerData(useAvatar: Boolean): PlayerData {
-        val playerData = PlayerData.Factory().create("UnitTest")
-        val resourceStream = if (useAvatar) ClassLoader.getSystemResourceAsStream("test-avatar.png") else null
-        resourceStream?.run {
-            println("Reading avatar")
-            playerData.avatar = readAllBytes()
-        }
-        return playerData
+        return PlayerData.Factory().create("UnitTest")
     }
 
 }

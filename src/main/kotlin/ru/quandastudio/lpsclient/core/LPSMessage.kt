@@ -64,19 +64,6 @@ open class LPSMessage {
         val description: String = ""
     ) : LPSMessage()
 
-    @Action("banlist")
-    data class LPSBannedListMessage(val data: List<BlackListItem>) : LPSMessage()
-
-    @Action("friends")
-    data class LPSFriendsList(
-        val data: ArrayList<FriendInfo>
-    ) : LPSMessage()
-
-    @Action("history")
-    data class LPSHistoryList(
-        val data: List<HistoryInfo>
-    ) : LPSMessage()
-
     @Action("fm_request")
     data class LPSFriendModeRequest(
         val login: String? = null,
