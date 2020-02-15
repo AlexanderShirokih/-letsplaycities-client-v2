@@ -30,6 +30,7 @@ open class LPSMessage {
         var snUID: String?,
         var authType: AuthType?,
         var youStarter: Boolean,
+        val pictureHash: String?,
         var banned: Boolean = false
     ) : LPSMessage() {
 
