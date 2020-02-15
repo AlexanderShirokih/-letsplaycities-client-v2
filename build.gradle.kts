@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "ru.quandastudio.lps"
-version = "0.3.5"
+version = "0.4.0"
 
 val artifactName = "lps-client"
 
@@ -16,8 +16,12 @@ dependencies {
     implementation("ru.aleshi:java-android-websocket-client:1.2.3")
     implementation("com.google.code.gson:gson:2.8.5")
     implementation("io.reactivex.rxjava2:rxkotlin:2.4.0")
+    implementation("com.squareup.retrofit2:retrofit:2.7.1")
+    implementation("com.squareup.retrofit2:converter-gson:2.7.1")
+    implementation("com.squareup.retrofit2:adapter-rxjava2:2.7.1")
     implementation(kotlin("stdlib-jdk8"))
     implementation(kotlin("reflect"))
+
     testImplementation("junit:junit:4.12")
 }
 
