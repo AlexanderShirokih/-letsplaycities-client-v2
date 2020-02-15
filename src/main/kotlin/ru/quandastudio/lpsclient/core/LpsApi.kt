@@ -1,12 +1,15 @@
 package ru.quandastudio.lpsclient.core
 
+import io.reactivex.Completable
 import io.reactivex.Observable
 import okhttp3.Credentials
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.Path
 import ru.quandastudio.lpsclient.model.BlackListItem
 import ru.quandastudio.lpsclient.model.FriendInfo
 import ru.quandastudio.lpsclient.model.HistoryInfo
@@ -32,13 +35,18 @@ interface LpsApi {
         }
     }
 
-    @GET("user/friends")
+    @GET("friend/")
     fun getFriendsList(): Observable<List<FriendInfo>>
 
-    @GET("user/history")
+    @GET("history/")
     fun getHistoryList(): Observable<List<HistoryInfo>>
 
-    @GET("user/blacklist")
+    @GET("blacklist/")
     fun getBlackList(): Observable<List<BlackListItem>>
 
+    @DELETE("friend/{id}")
+    fun deleteFriend(@Path("id") friendId: Int): Completable
+
+    @DELETE("blacklist/{id}")
+    fun deleteFromBlacklist(@Path("id") bannedId: Int): Completable
 }
