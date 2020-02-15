@@ -40,7 +40,8 @@ open class LPSMessage {
             clientVersion = clientVersion,
             clientBuild = clientBuild,
             isFriend = isFriend,
-            allowSendUID = true
+            allowSendUID = true,
+            pictureHash = pictureHash
         )
     }
 

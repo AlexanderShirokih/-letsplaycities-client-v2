@@ -113,6 +113,7 @@ class NetworkClient constructor(
                     is LPSMessage.LPSLoggedIn -> {
                         ad.userID = it.userId
                         ad.accessHash = it.accHash
+                        userData.pictureHash = it.picHash
                         Maybe.just(AuthResult(ad, it.newerBuild, it.picHash))
                     }
                     else -> Maybe.error(LPSException("Waiting for LPSLoggedIn message, but $it received"))
