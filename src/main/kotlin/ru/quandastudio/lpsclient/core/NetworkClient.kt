@@ -83,11 +83,11 @@ class NetworkClient constructor(
 
     sealed class AvatarState {
 
-        object NoAvatar : AvatarState()
+        object NoChanges : AvatarState()
 
         object DeleteAvatar : AvatarState()
 
-        class PresentAvatar(val data: ByteArray) : AvatarState()
+        class UpdateAvatar(val data: ByteArray) : AvatarState()
     }
 
     fun login(userData: PlayerData, avatarState: AvatarState, fbToken: String): Maybe<AuthResult> {
@@ -120,7 +120,7 @@ class NetworkClient constructor(
             }
             .doOnSuccess { authResult ->
                 when (avatarState) {
-                    is AvatarState.PresentAvatar -> {
+                    is AvatarState.UpdateAvatar -> {
                         val hash = avatarState.data.toBase64()
                         val md5 = Utils.md5(hash)
                         if (md5 != authResult.picHash) {
@@ -130,7 +130,7 @@ class NetworkClient constructor(
                     }
                     is AvatarState.DeleteAvatar ->
                         sendMessage(LPSClientMessage.LPSAvatar(LPSClientMessage.RequestType.DELETE, null, null))
-                    is AvatarState.NoAvatar -> Unit
+                    is AvatarState.NoChanges -> Unit
                 }
             }
     }
