@@ -52,10 +52,10 @@ class NetworkRepository(
         Observable.just(mNetworkClient)
             .subscribeOn(Schedulers.io())
 
-    fun login(userData: PlayerData, avatarState: NetworkClient.AvatarState): Observable<NetworkClient.AuthResult> {
+    fun login(userData: PlayerData): Observable<NetworkClient.AuthResult> {
         return networkClient()
             .flatMap { it.connect() }
-            .flatMapMaybe { it.login(userData, avatarState, token.blockingGet()) }
+            .flatMapMaybe { it.login(userData, token.blockingGet()) }
     }
 
     class BannedPlayerException : Exception()
@@ -92,18 +92,6 @@ class NetworkRepository(
             .cast(LPSMessage.LPSPlayMessage::class.java)
             .map { it.getPlayerData() to it.youStarter }
             .firstElement()
-    }
-
-    fun deleteFriend(userId: Int): Completable {
-        return networkClient()
-            .doOnNext { mNetworkClient.deleteFriend(userId) }
-            .ignoreElements()
-    }
-
-    fun removeFromBanList(userId: Int): Completable {
-        return networkClient()
-            .doOnNext { mNetworkClient.removeFromBanList(userId) }
-            .ignoreElements()
     }
 
     fun disconnect() = mNetworkClient.disconnect()

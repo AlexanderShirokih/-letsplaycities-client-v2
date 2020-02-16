@@ -2,31 +2,44 @@ package ru.quandastudio.lpsclient.core
 
 import io.reactivex.Completable
 import io.reactivex.Maybe
+import io.reactivex.Single
 import okhttp3.Credentials
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import okhttp3.Response
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.http.DELETE
-import retrofit2.http.GET
-import retrofit2.http.Path
-import ru.quandastudio.lpsclient.model.BlackListItem
-import ru.quandastudio.lpsclient.model.FriendInfo
-import ru.quandastudio.lpsclient.model.HistoryInfo
+import retrofit2.http.*
+import ru.quandastudio.lpsclient.model.*
 
 interface LpsApi {
 
+    class AuthorizationInterceptor(userId: Int, hash: String) : Interceptor {
+        private val credentials = Credentials.basic(userId.toString(), hash)
+
+        override fun intercept(chain: Interceptor.Chain): Response = chain.proceed(
+            chain.request()
+                .newBuilder()
+                .header("Authorization", credentials)
+                .build()
+        )
+
+    }
+
     companion object {
+
         fun create(baseUrl: String, userId: Int, hash: String): LpsApi {
+            return create(
+                baseUrl, OkHttpClient().newBuilder().addInterceptor(
+                    AuthorizationInterceptor(userId, hash)
+                ).build()
+            )
+        }
+
+        fun create(baseUrl: String, client: OkHttpClient): LpsApi {
             val retrofit = Retrofit.Builder()
-                .client(OkHttpClient().newBuilder().addInterceptor { chain ->
-                    chain.proceed(
-                        chain.request()
-                            .newBuilder()
-                            .header("Authorization", Credentials.basic(userId.toString(), hash))
-                            .build()
-                    )
-                }.build())
+                .client(client)
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create())
                 .baseUrl(baseUrl)
@@ -49,4 +62,13 @@ interface LpsApi {
 
     @DELETE("blacklist/{id}")
     fun deleteFromBlacklist(@Path("id") bannedId: Int): Completable
+
+    @POST("user/picture")
+    fun updatePicture(@Path("t") type: String, @Path("hash") hash: String, @Body data: ByteArray): Single<MessageWrapper<String>>
+
+    @DELETE("user/picture")
+    fun deletePicture(): Completable
+
+    @POST("user/")
+    fun signUp(@Body request: SignUpRequest): Maybe<MessageWrapper<SignUpResponse>>
 }

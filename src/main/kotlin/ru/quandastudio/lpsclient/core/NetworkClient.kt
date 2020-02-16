@@ -5,16 +5,14 @@ import io.reactivex.Observable
 import io.reactivex.schedulers.Schedulers
 import ru.quandastudio.lpsclient.AuthorizationException
 import ru.quandastudio.lpsclient.LPSException
-import ru.quandastudio.lpsclient.model.AuthData
 import ru.quandastudio.lpsclient.model.PlayerData
-import ru.quandastudio.lpsclient.model.util.Utils
-import ru.quandastudio.lpsclient.socket.SocketObservable
 import ru.quandastudio.lpsclient.socket.PureSocketObservable
+import ru.quandastudio.lpsclient.socket.SocketObservable
 import ru.quandastudio.lpsclient.socket.WebSocketObservable
 import java.util.concurrent.TimeUnit
 
 class NetworkClient constructor(
-    private val base64Provider: Base64Provider,
+    base64Provider: Base64Provider,
     val isLocal: Boolean,
     connectionType: ConnectionType,
     host: String,
@@ -52,7 +50,6 @@ class NetworkClient constructor(
         .publish().refCount(3, TimeUnit.SECONDS)
 
     class AuthResult(
-        val authData: AuthData,
         val newerBuild: Int,
         val picHash: String?
     )
@@ -79,28 +76,9 @@ class NetworkClient constructor(
 
     private fun sendMessage(message: LPSClientMessage) = requireConnection().sendData(json.write(message))
 
-    private fun ByteArray.toBase64(): String = base64Provider.encode(this)
-
-    sealed class AvatarState {
-
-        object NoChanges : AvatarState()
-
-        object DeleteAvatar : AvatarState()
-
-        class UpdateAvatar(val data: ByteArray) : AvatarState()
-    }
-
-    fun login(userData: PlayerData, avatarState: AvatarState, fbToken: String): Maybe<AuthResult> {
-        val ad = userData.authData
+    fun login(userData: PlayerData, fbToken: String): Maybe<AuthResult> {
         return Observable
-            .fromCallable {
-                LPSClientMessage.LPSLogIn(
-                    pd = userData,
-                    fbToken = fbToken,
-                    userId = if (ad.userID > 0) ad.userID else null,
-                    hash = ad.accessHash
-                )
-            }
+            .fromCallable { LPSClientMessage.LPSLogIn(userData, fbToken) }
             .doOnNext(::sendMessage)
             .flatMap { getMessages() }
             .firstElement()
@@ -109,29 +87,12 @@ class NetworkClient constructor(
                     is LPSMessage.LPSLeaveMessage ->
                         Maybe.error(LPSException("Cannot logIn on server"))
                     is LPSMessage.LPSBanned ->
-                        Maybe.error(AuthorizationException(it.banReason, it.connError))
+                        Maybe.error(AuthorizationException(it.banReason))
                     is LPSMessage.LPSLoggedIn -> {
-                        ad.userID = it.userId
-                        ad.accessHash = it.accHash
                         userData.pictureHash = it.picHash
-                        Maybe.just(AuthResult(ad, it.newerBuild, it.picHash))
+                        Maybe.just(AuthResult(it.newerBuild, it.picHash))
                     }
                     else -> Maybe.error(LPSException("Waiting for LPSLoggedIn message, but $it received"))
-                }
-            }
-            .doOnSuccess { authResult ->
-                when (avatarState) {
-                    is AvatarState.UpdateAvatar -> {
-                        val hash = avatarState.data.toBase64()
-                        val md5 = Utils.md5(hash)
-                        if (md5 != authResult.picHash) {
-                            val msg = LPSClientMessage.LPSAvatar(LPSClientMessage.RequestType.SEND, hash, md5)
-                            sendMessage(msg)
-                        }
-                    }
-                    is AvatarState.DeleteAvatar ->
-                        sendMessage(LPSClientMessage.LPSAvatar(LPSClientMessage.RequestType.DELETE, null, null))
-                    is AvatarState.NoChanges -> Unit
                 }
             }
     }
@@ -141,24 +102,6 @@ class NetworkClient constructor(
             LPSClientMessage.LPSPlay(
                 mode = if (isWaiting) LPSClientMessage.PlayMode.FRIEND else LPSClientMessage.PlayMode.RANDOM_PAIR,
                 oppUid = if (isWaiting) userId!! else null
-            )
-        )
-    }
-
-    fun deleteFriend(userId: Int) {
-        sendMessage(
-            LPSClientMessage.LPSFriendAction(
-                type = LPSClientMessage.RequestType.DELETE,
-                oppUid = userId
-            )
-        )
-    }
-
-    fun removeFromBanList(userId: Int) {
-        sendMessage(
-            LPSClientMessage.LPSBanList(
-                type = LPSClientMessage.RequestType.DELETE,
-                friendUid = userId
             )
         )
     }

@@ -1,7 +1,5 @@
 package ru.quandastudio.lpsclient.core
 
-import ru.quandastudio.lpsclient.model.AuthData
-import ru.quandastudio.lpsclient.model.AuthType
 import ru.quandastudio.lpsclient.model.PlayerData
 
 open class LPSClientMessage {
@@ -9,49 +7,25 @@ open class LPSClientMessage {
 
     @Action("login")
     data class LPSLogIn(
-        val version: Int,
+        val version: Int = 5,
         val login: String,
-        val accToken: String,
-        val authType: AuthType,
-        val snUID: String,
         val clientBuild: Int,
         val clientVersion: String,
         val canReceiveMessages: Boolean,
-        val allowSendUID: Boolean,
         val firebaseToken: String,
         val uid: Int?,
         val hash: String?
     ) : LPSClientMessage() {
-        constructor(pd: PlayerData, fbToken: String, userId: Int?, hash: String?) : this(
-            version = 4,
+        constructor(pd: PlayerData, fbToken: String) : this(
             login = pd.authData.login,
-            accToken = pd.authData.accessToken,
-            authType = pd.authData.snType,
-            snUID = pd.authData.snUID,
+            uid = pd.authData.userID,
+            hash = pd.authData.accessHash,
             clientBuild = pd.clientBuild,
             clientVersion = pd.clientVersion,
             canReceiveMessages = pd.canReceiveMessages,
-            allowSendUID = pd.allowSendUID,
-            firebaseToken = fbToken,
-            uid = userId,
-            hash = hash
+            firebaseToken = fbToken
         )
-
-        fun getPlayerData(): PlayerData =
-            PlayerData(AuthData(login, snUID, authType, ""))
-                .also { pd ->
-                    pd.canReceiveMessages = canReceiveMessages
-                    pd.clientVersion = clientVersion
-                    pd.clientBuild = clientBuild
-                }
     }
-
-    @Action("avatar")
-    data class LPSAvatar(
-        val type: RequestType,
-        val avatar: String?,
-        val hash: String?
-    ) : LPSClientMessage()
 
     enum class PlayMode {
         RANDOM_PAIR,
@@ -71,9 +45,7 @@ open class LPSClientMessage {
     ) : LPSClientMessage()
 
     enum class RequestType {
-        QUERY_LIST,
         SEND,
-        DELETE,
         ACCEPT,
         DENY
     }

@@ -7,16 +7,13 @@ open class LPSMessage {
 
     @Action("logged_in")
     data class LPSLoggedIn(
-        val userId: Int,
-        val accHash: String,
         val newerBuild: Int,
         val picHash: String
     ) : LPSMessage()
 
     @Action("login_error")
     data class LPSBanned(
-        val banReason: String? = null,
-        val connError: String? = null
+        val banReason: String
     ) : LPSMessage()
 
     @Action("join")
@@ -27,20 +24,18 @@ open class LPSMessage {
         var clientVersion: String,
         var clientBuild: Int,
         var isFriend: Boolean,
-        var snUID: String?,
-        var authType: AuthType?,
+        var authType: AuthType,
         var youStarter: Boolean,
         val pictureHash: String?,
         var banned: Boolean = false
     ) : LPSMessage() {
 
         fun getPlayerData() = PlayerData(
-            AuthData(login, snUID ?: "", authType ?: AuthType.Native, "", userID = oppUid),
+            AuthData(login, authType, oppUid, ""),
             canReceiveMessages = canReceiveMessages,
             clientVersion = clientVersion,
             clientBuild = clientBuild,
             isFriend = isFriend,
-            allowSendUID = true,
             pictureHash = pictureHash
         )
     }
