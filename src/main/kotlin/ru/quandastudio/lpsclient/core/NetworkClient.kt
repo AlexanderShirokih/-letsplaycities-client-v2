@@ -12,7 +12,6 @@ import ru.quandastudio.lpsclient.socket.WebSocketObservable
 import java.util.concurrent.TimeUnit
 
 class NetworkClient constructor(
-    base64Provider: Base64Provider,
     val isLocal: Boolean,
     connectionType: ConnectionType,
     host: String,
@@ -27,10 +26,6 @@ class NetworkClient constructor(
                 WebSocket -> WebSocketObservable(host, port ?: 8080)
             }
         }
-    }
-
-    init {
-        Base64Ext.installBase64(base64Provider)
     }
 
     private val json = JsonMessage()
