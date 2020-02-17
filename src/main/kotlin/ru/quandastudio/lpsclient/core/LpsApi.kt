@@ -3,7 +3,6 @@ package ru.quandastudio.lpsclient.core
 import io.reactivex.Completable
 import io.reactivex.Maybe
 import io.reactivex.Single
-import okhttp3.Credentials
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Response
@@ -15,8 +14,8 @@ import ru.quandastudio.lpsclient.model.*
 
 interface LpsApi {
 
-    class AuthorizationInterceptor(userId: Int, hash: String) : Interceptor {
-        private val credentials = Credentials.basic(userId.toString(), hash)
+    class AuthorizationInterceptor(credentials: Credentials) : Interceptor {
+        private val credentials = okhttp3.Credentials.basic(credentials.userId.toString(), credentials.hash)
 
         override fun intercept(chain: Interceptor.Chain): Response = chain.proceed(
             chain.request()
@@ -29,11 +28,10 @@ interface LpsApi {
 
     companion object {
 
-        fun create(baseUrl: String, userId: Int, hash: String): LpsApi {
+        fun create(baseUrl: String, credentials: Credentials): LpsApi {
             return create(
-                baseUrl, OkHttpClient().newBuilder().addInterceptor(
-                    AuthorizationInterceptor(userId, hash)
-                ).build()
+                baseUrl,
+                OkHttpClient().newBuilder().addInterceptor(AuthorizationInterceptor(credentials)).build()
             )
         }
 
@@ -41,6 +39,7 @@ interface LpsApi {
             val retrofit = Retrofit.Builder()
                 .client(client)
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                .addConverterFactory(EnumConverterFactory())
                 .addConverterFactory(GsonConverterFactory.create())
                 .baseUrl(baseUrl)
                 .build()
@@ -59,6 +58,12 @@ interface LpsApi {
 
     @DELETE("friend/{id}")
     fun deleteFriend(@Path("id") friendId: Int): Completable
+
+    @PUT("friend/request/{id}/{type}")
+    fun sendFriendRequest(@Path("id") userId: Int, @Path("type") requestType: RequestType): Completable
+
+    @PUT("user/request/{id}/{type}")
+    fun sendGameRequestResult(@Path("id") userId: Int, @Path("type") requestType: RequestType): Completable
 
     @DELETE("blacklist/{id}")
     fun deleteFromBlacklist(@Path("id") bannedId: Int): Completable

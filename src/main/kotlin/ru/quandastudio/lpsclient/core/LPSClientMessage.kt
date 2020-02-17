@@ -1,6 +1,7 @@
 package ru.quandastudio.lpsclient.core
 
 import ru.quandastudio.lpsclient.model.PlayerData
+import ru.quandastudio.lpsclient.model.RequestType
 
 open class LPSClientMessage {
     val action: String = (this::class.annotations.first { it is Action } as Action).name
@@ -18,8 +19,8 @@ open class LPSClientMessage {
     ) : LPSClientMessage() {
         constructor(pd: PlayerData, fbToken: String) : this(
             login = pd.authData.login,
-            uid = pd.authData.userID,
-            hash = pd.authData.accessHash,
+            uid = pd.authData.credentials.userId,
+            hash = pd.authData.credentials.hash,
             clientBuild = pd.clientBuild,
             clientVersion = pd.clientVersion,
             canReceiveMessages = pd.canReceiveMessages,
@@ -43,12 +44,6 @@ open class LPSClientMessage {
         val type: RequestType,
         val friendUid: Int? = null
     ) : LPSClientMessage()
-
-    enum class RequestType {
-        SEND,
-        ACCEPT,
-        DENY
-    }
 
     @Action("friend")
     data class LPSFriendAction(

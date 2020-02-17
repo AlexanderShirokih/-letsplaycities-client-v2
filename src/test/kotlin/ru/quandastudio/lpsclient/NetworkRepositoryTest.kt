@@ -21,8 +21,8 @@ internal class NetworkRepositoryTest {
 //        println("Play as=${playerData.authData.login}, with=${it.first.authData.login}, starter=${it.second}")
 //    }
 
-    private fun createPlayerData(useAvatar: Boolean): PlayerData {
-        return PlayerData.Factory().create("UnitTest")
+    private fun createPlayerData(): PlayerData {
+        return PlayerData.SimpleFactory().create("UnitTest")
     }
 
 }

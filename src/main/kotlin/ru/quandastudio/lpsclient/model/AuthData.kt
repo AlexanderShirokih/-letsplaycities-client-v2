@@ -5,13 +5,9 @@ data class AuthData(
     val login: String,
     /** Social network type */
     val snType: AuthType,
-    /** InGame userId */
-    val userID: Int,
-    /** InGame hash */
-    val accessHash: String
+    /** UserId and access hash pair */
+    val credentials: Credentials
 ) {
-
-    fun getCredentials() = Credentials(userID, accessHash)
 
     interface SaveProvider {
         fun save(authData: AuthData)

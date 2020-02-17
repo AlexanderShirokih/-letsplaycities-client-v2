@@ -6,6 +6,7 @@ import io.reactivex.schedulers.Schedulers
 import ru.quandastudio.lpsclient.AuthorizationException
 import ru.quandastudio.lpsclient.LPSException
 import ru.quandastudio.lpsclient.model.PlayerData
+import ru.quandastudio.lpsclient.model.RequestType
 import ru.quandastudio.lpsclient.socket.PureSocketObservable
 import ru.quandastudio.lpsclient.socket.SocketObservable
 import ru.quandastudio.lpsclient.socket.WebSocketObservable
@@ -116,13 +117,13 @@ class NetworkClient constructor(
     }
 
     fun sendFriendRequest() {
-        sendMessage(LPSClientMessage.LPSFriendAction(LPSClientMessage.RequestType.SEND))
+        sendMessage(LPSClientMessage.LPSFriendAction(RequestType.SEND))
     }
 
     fun sendFriendAcceptance(accepted: Boolean) {
         sendMessage(
             LPSClientMessage.LPSFriendAction(
-                if (accepted) LPSClientMessage.RequestType.ACCEPT else LPSClientMessage.RequestType.DENY
+                if (accepted) RequestType.ACCEPT else RequestType.DENY
             )
         )
     }
