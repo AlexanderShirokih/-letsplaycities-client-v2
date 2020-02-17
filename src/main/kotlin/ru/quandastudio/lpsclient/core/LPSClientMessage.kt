@@ -14,8 +14,8 @@ open class LPSClientMessage {
         val clientVersion: String,
         val canReceiveMessages: Boolean,
         val firebaseToken: String,
-        val uid: Int?,
-        val hash: String?
+        val uid: Int,
+        val hash: String
     ) : LPSClientMessage() {
         constructor(pd: PlayerData, fbToken: String) : this(
             login = pd.authData.login,
