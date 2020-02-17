@@ -75,5 +75,5 @@ interface LpsApi {
     fun deletePicture(): Completable
 
     @POST("user/")
-    fun signUp(@Body request: SignUpRequest): Maybe<MessageWrapper<SignUpResponse>>
+    fun signUp(@Body request: SignUpRequest): Single<MessageWrapper<SignUpResponse>>
 }
