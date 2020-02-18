@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "ru.quandastudio.lps"
-version = "0.4.2.7"
+version = "0.4.2.8"
 
 val artifactName = "lps-client"
 

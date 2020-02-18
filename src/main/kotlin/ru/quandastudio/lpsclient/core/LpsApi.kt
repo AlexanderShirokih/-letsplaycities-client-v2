@@ -14,24 +14,27 @@ import ru.quandastudio.lpsclient.model.*
 
 interface LpsApi {
 
-    class AuthorizationInterceptor(credentials: Credentials) : Interceptor {
-        private val credentials = okhttp3.Credentials.basic(credentials.userId.toString(), credentials.hash)
+    class AuthorizationInterceptor(private val credentialsProvider: CredentialsProvider) : Interceptor {
 
         override fun intercept(chain: Interceptor.Chain): Response = chain.proceed(
             chain.request()
                 .newBuilder()
-                .header("Authorization", credentials)
+                .apply {
+                    val cred = credentialsProvider.getCredentials()
+                    if (cred.isValid()) {
+                        header("Authorization", okhttp3.Credentials.basic(cred.userId.toString(), cred.hash))
+                    }
+                }
                 .build()
         )
-
     }
 
     companion object {
 
-        fun create(baseUrl: String, credentials: Credentials): LpsApi {
+        fun create(baseUrl: String, credentialsProvider: CredentialsProvider): LpsApi {
             return create(
                 baseUrl,
-                OkHttpClient().newBuilder().addInterceptor(AuthorizationInterceptor(credentials)).build()
+                OkHttpClient().newBuilder().addInterceptor(AuthorizationInterceptor(credentialsProvider)).build()
             )
         }
 
