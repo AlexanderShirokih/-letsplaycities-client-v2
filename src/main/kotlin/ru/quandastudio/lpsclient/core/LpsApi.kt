@@ -72,7 +72,7 @@ interface LpsApi {
     fun deleteFromBlacklist(@Path("id") bannedId: Int): Completable
 
     @POST("user/picture")
-    fun updatePicture(@Path("t") type: String, @Path("hash") hash: String, @Body data: ByteArray): Single<MessageWrapper<String>>
+    fun updatePicture(@Query("t") type: String, @Query("hash") hash: String, @Body data: ByteArray): Single<MessageWrapper<String>>
 
     @DELETE("user/picture")
     fun deletePicture(): Completable
