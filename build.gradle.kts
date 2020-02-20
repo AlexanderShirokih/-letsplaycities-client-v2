@@ -4,11 +4,11 @@ import groovy.util.Node
 plugins {
     id("com.jfrog.bintray") version "1.8.1"
     `maven-publish`
-    kotlin("jvm") version "1.3.50"
+    kotlin("jvm") version "1.3.61"
 }
 
 group = "ru.quandastudio.lps"
-version = "0.4.2.9"
+version = "0.4.3"
 
 val artifactName = "lps-client"
 

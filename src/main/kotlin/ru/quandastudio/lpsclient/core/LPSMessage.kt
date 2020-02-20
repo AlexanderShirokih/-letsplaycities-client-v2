@@ -33,8 +33,7 @@ open class LPSMessage {
         fun getPlayerData() = PlayerData(
             AuthData(login, authType, Credentials(oppUid, "")),
             canReceiveMessages = canReceiveMessages,
-            clientVersion = clientVersion,
-            clientBuild = clientBuild,
+            versionInfo = VersionInfo(clientVersion, clientBuild),
             isFriend = isFriend,
             pictureHash = pictureHash
         )

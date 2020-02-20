@@ -21,8 +21,8 @@ open class LPSClientMessage {
             login = pd.authData.login,
             uid = pd.authData.credentials.userId,
             hash = pd.authData.credentials.hash,
-            clientBuild = pd.clientBuild,
-            clientVersion = pd.clientVersion,
+            clientBuild = pd.versionInfo.versionCode,
+            clientVersion = pd.versionInfo.versionName,
             canReceiveMessages = pd.canReceiveMessages,
             firebaseToken = fbToken
         )

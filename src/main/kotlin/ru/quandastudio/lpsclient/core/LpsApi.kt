@@ -5,6 +5,7 @@ import io.reactivex.Maybe
 import io.reactivex.Single
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import okhttp3.RequestBody
 import okhttp3.Response
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
@@ -72,7 +73,7 @@ interface LpsApi {
     fun deleteFromBlacklist(@Path("id") bannedId: Int): Completable
 
     @POST("user/picture")
-    fun updatePicture(@Query("t") type: String, @Query("hash") hash: String, @Body data: ByteArray): Single<MessageWrapper<String>>
+    fun updatePicture(@Query("t") type: String, @Query("hash") hash: String, @Body body: RequestBody): Single<MessageWrapper<String>>
 
     @DELETE("user/picture")
     fun deletePicture(): Completable
