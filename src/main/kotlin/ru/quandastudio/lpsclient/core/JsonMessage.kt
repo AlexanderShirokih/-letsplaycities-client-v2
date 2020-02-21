@@ -18,7 +18,7 @@ class JsonMessage {
 
     fun write(msg: LPSMessage) = gson.toJson(msg).toCharArray()
 
-    fun readClientMessage(data: CharArray): LPSClientMessage =
+    fun readClientMessage(data: CharArray): LPSClientMessage? =
         gson.fromJson(CharArrayReader(data), LPSClientMessage::class.java)
 
 }

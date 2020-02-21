@@ -9,7 +9,7 @@ import kotlin.reflect.full.findAnnotation
 class LPSClientMessageDeserializer : JsonDeserializer<LPSClientMessage> {
     private val lpsMessages = LPSClientMessage::class.nestedClasses
 
-    override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): LPSClientMessage {
+    override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): LPSClientMessage? {
         val action = json.asJsonObject.takeIf { it.has("action") }?.get("action")?.asString
 
         val clz = lpsMessages.firstOrNull() {
@@ -20,7 +20,7 @@ class LPSClientMessageDeserializer : JsonDeserializer<LPSClientMessage> {
         return if (clz != null)
             context.deserialize(json, clz.java)
         else
-            LPSClientMessage.LPSLeave("Deserialization error!")
+            null
     }
 
 }
