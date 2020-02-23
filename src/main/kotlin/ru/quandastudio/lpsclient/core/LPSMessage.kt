@@ -42,13 +42,15 @@ open class LPSMessage {
     @Action("word")
     data class LPSWordMessage(
         val result: WordResult,
-        val word: String
+        val word: String,
+        val ownerId: Int
     ) : LPSMessage()
 
     @Action("msg")
     data class LPSMsgMessage(
         val msg: String,
-        val isSystemMsg: Boolean
+        val isSystemMsg: Boolean,
+        val ownerId: Int
     ) : LPSMessage()
 
     @Action("leave")
