@@ -13,7 +13,6 @@ import ru.quandastudio.lpsclient.socket.WebSocketObservable
 import java.util.concurrent.TimeUnit
 
 class NetworkClient constructor(
-    val isLocal: Boolean,
     connectionType: ConnectionType,
     host: String,
     port: Int? = null
@@ -37,13 +36,13 @@ class NetworkClient constructor(
         }
         .map {
             when (it.state) {
-                SocketObservable.State.DISCONNECTED -> LPSMessage.LPSLeaveMessage(false)
+                SocketObservable.State.DISCONNECTED -> LPSMessage.LPSLeaveMessage(false, 0)
                 SocketObservable.State.DATA -> json.readMessage(it.data)
                 SocketObservable.State.CONNECTED -> LPSMessage.LPSConnectedMessage
             }
         }
         .subscribeOn(Schedulers.io())
-        .publish().refCount(3, TimeUnit.SECONDS)
+        .publish().refCount(150, TimeUnit.SECONDS)
 
     class AuthResult(
         val newerBuild: Int,
@@ -116,22 +115,14 @@ class NetworkClient constructor(
         sendMessage(LPSClientMessage.LPSMsg(message))
     }
 
-    fun sendFriendRequest() {
-        sendMessage(LPSClientMessage.LPSFriendAction(RequestType.SEND))
+    fun sendFriendRequest(userId: Int) {
+        sendMessage(LPSClientMessage.LPSFriendAction(RequestType.SEND, userId))
     }
 
-    fun sendFriendAcceptance(accepted: Boolean) {
-        sendMessage(
-            LPSClientMessage.LPSFriendAction(
-                if (accepted) RequestType.ACCEPT else RequestType.DENY
-            )
-        )
-    }
-
-    fun sendFriendRequestResult(accepted: Boolean, userId: Int) {
+    fun acceptFriendRequest(userId: Int) {
         sendMessage(
             LPSClientMessage.LPSFriendMode(
-                result = if (accepted) 1 else 2,
+                result = 1,
                 oppUid = userId
             )
         )

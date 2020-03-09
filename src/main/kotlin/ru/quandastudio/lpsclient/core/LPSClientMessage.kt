@@ -40,16 +40,10 @@ open class LPSClientMessage {
         val oppUid: Int?
     ) : LPSClientMessage()
 
-    @Action("banlist")
-    data class LPSBanList(
-        val type: RequestType,
-        val friendUid: Int? = null
-    ) : LPSClientMessage()
-
     @Action("friend")
     data class LPSFriendAction(
         val type: RequestType,
-        val oppUid: Int? = null
+        val oppUid: Int
     ) : LPSClientMessage()
 
     @Action("ban")

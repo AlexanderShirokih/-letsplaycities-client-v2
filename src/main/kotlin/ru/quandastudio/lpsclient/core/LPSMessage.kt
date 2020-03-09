@@ -54,7 +54,10 @@ open class LPSMessage {
     ) : LPSMessage()
 
     @Action("leave")
-    data class LPSLeaveMessage(val leaved: Boolean) : LPSMessage()
+    data class LPSLeaveMessage(
+        val leaved: Boolean,
+        val ownerId: Int
+    ) : LPSMessage()
 
     @Action("banned")
     data class LPSBannedMessage(

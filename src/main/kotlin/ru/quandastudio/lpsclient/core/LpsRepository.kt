@@ -18,9 +18,11 @@ class LpsRepository constructor(private val api: LpsApi) {
 
     fun deleteFriend(friendId: Int) = api.deleteFriend(friendId)
 
-    fun declineFriendRequest(userId: Int) = api.sendFriendRequest(userId, RequestType.DENY)
+    fun sendFriendRequestResult(userId: Int, isAccepted: Boolean) =
+        api.sendFriendRequest(userId, if (isAccepted) RequestType.ACCEPT else RequestType.DENY)
 
-    fun declineGameRequestResult(userId: Int) = api.sendGameRequestResult(userId, RequestType.DENY)
+    fun declineGameRequestResult(userId: Int) =
+        api.sendGameRequestResult(userId, RequestType.DENY)
 
     fun deleteFromBlacklist(bannedId: Int) = api.deleteFromBlacklist(bannedId)
 

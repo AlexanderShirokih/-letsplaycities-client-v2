@@ -17,8 +17,6 @@ class NetworkRepository(
 
     private fun inputMessage(): Observable<LPSMessage> = mNetworkClient.getMessages()
 
-    val isLocal = mNetworkClient.isLocal
-
     fun getWords(): Observable<LPSMessage.LPSWordMessage> =
         inputMessage().filter { it is LPSMessage.LPSWordMessage }.cast(LPSMessage.LPSWordMessage::class.java)
 
@@ -32,20 +30,15 @@ class NetworkRepository(
     fun getTimeout(): Maybe<LPSMessage> =
         inputMessage().filter { it is LPSMessage.LPSTimeoutMessage }.firstElement()
 
-    fun getFriendsRequest(): Observable<LPSMessage.FriendRequest> =
+    fun getFriendsRequest(): Observable<LPSMessage.LPSFriendRequest> =
         inputMessage().filter { it is LPSMessage.LPSFriendRequest }.cast(LPSMessage.LPSFriendRequest::class.java)
-            .map { it.result }
 
     fun getFriendsModeRequest(): Observable<LPSMessage.LPSFriendModeRequest> =
-        inputMessage().filter { it is LPSMessage.LPSFriendModeRequest }.cast(LPSMessage.LPSFriendModeRequest::class.java)
+        inputMessage().filter { it is LPSMessage.LPSFriendModeRequest }
+            .cast(LPSMessage.LPSFriendModeRequest::class.java)
 
     fun getKick(): Maybe<LPSMessage.LPSBannedMessage> =
         inputMessage().filter { it is LPSMessage.LPSBannedMessage }.cast(LPSMessage.LPSBannedMessage::class.java)
-            .firstElement()
-
-    fun getDisconnect(): Maybe<LPSMessage.LPSLeaveMessage> =
-        inputMessage().filter { it is LPSMessage.LPSLeaveMessage && !it.leaved }
-            .cast(LPSMessage.LPSLeaveMessage::class.java)
             .firstElement()
 
     private fun networkClient(): Observable<NetworkClient> =
@@ -96,10 +89,10 @@ class NetworkRepository(
 
     fun disconnect() = mNetworkClient.disconnect()
 
-    fun sendFriendRequestResult(result: Boolean, userId: Int): Observable<NetworkRepository> {
+    fun acceptFriendRequest(userId: Int): Observable<NetworkRepository> {
         return networkClient()
             .subscribeOn(Schedulers.io())
-            .doOnNext { it.sendFriendRequestResult(result, userId) }
+            .doOnNext { it.acceptFriendRequest(userId) }
             .map { this }
     }
 
@@ -119,12 +112,8 @@ class NetworkRepository(
         return networkClient().doOnNext { client -> client.sendAdminCommand(command) }.ignoreElements()
     }
 
-    fun sendFriendRequest(): Completable {
-        return networkClient().doOnNext { client -> client.sendFriendRequest() }.ignoreElements()
-    }
-
-    fun sendFriendAcceptance(accepted: Boolean): Completable {
-        return networkClient().doOnNext { client -> client.sendFriendAcceptance(accepted) }.ignoreElements()
+    fun sendFriendRequest(userId: Int): Completable {
+        return networkClient().doOnNext { client -> client.sendFriendRequest(userId) }.ignoreElements()
     }
 
     fun banUser(userId: Int): Completable {
