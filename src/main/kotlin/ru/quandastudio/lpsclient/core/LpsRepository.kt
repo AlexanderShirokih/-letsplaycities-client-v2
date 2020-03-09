@@ -1,53 +1,53 @@
 package ru.quandastudio.lpsclient.core
 
-import io.reactivex.Single
 import okhttp3.MediaType
 import okhttp3.RequestBody
 import ru.quandastudio.lpsclient.AuthorizationException
-import ru.quandastudio.lpsclient.model.MessageWrapper
 import ru.quandastudio.lpsclient.model.RequestType
 import ru.quandastudio.lpsclient.model.SignUpRequest
+import ru.quandastudio.lpsclient.model.SignUpResponse
 
 class LpsRepository constructor(private val api: LpsApi) {
 
-    fun getFriendsList() = api.getFriendsList()
+    suspend fun getFriendsList() = api.getFriendsList()
 
-    fun getHistoryList() = api.getHistoryList()
+    suspend fun getHistoryList() = api.getHistoryList()
 
-    fun getBlackList() = api.getBlackList()
+    suspend fun getBlackList() = api.getBlackList()
 
-    fun deleteFriend(friendId: Int) = api.deleteFriend(friendId)
+    suspend fun deleteFriend(friendId: Int) = api.deleteFriend(friendId)
 
-    fun sendFriendRequestResult(userId: Int, isAccepted: Boolean) =
+    suspend fun sendFriendRequestResult(userId: Int, isAccepted: Boolean) =
         api.sendFriendRequest(userId, if (isAccepted) RequestType.ACCEPT else RequestType.DENY)
 
-    fun declineGameRequestResult(userId: Int) =
+    suspend fun declineGameRequestResult(userId: Int) =
         api.sendGameRequestResult(userId, RequestType.DENY)
 
-    fun deleteFromBlacklist(bannedId: Int) = api.deleteFromBlacklist(bannedId)
+    suspend fun deleteFromBlacklist(bannedId: Int) = api.deleteFromBlacklist(bannedId)
 
-    fun updatePicture(type: String, hash: String, data: ByteArray) =
-        Single.just(data)
-            .map {
-                RequestBody.create(
-                    MediaType.get(
-                        when (type) {
-                            "png", "jpeg", "gif" -> "image/$type"
-                            else -> "application/octet-stream"
-                        }
-                    ), data
-                )
-            }
-            .flatMap { body -> api.updatePicture(type, hash, body) }
-            .flatMap(MessageWrapper<String>::toSingle)
+    suspend fun updatePicture(type: String, hash: String, data: ByteArray): String {
+        val body = RequestBody.create(
+            MediaType.get(
+                when (type) {
+                    "png", "jpeg", "gif" -> "image/$type"
+                    else -> "application/octet-stream"
+                }
+            ), data
+        )
 
-    fun deletePicture() = api.deletePicture()
+        val picture = api.updatePicture(type, hash, body)
 
-    fun signUp(request: SignUpRequest) = api.signUp(request)
-        .flatMap {
-            if (it.error != null)
-                Single.error(AuthorizationException(it.error))
-            else
-                Single.just(it.data!!)
-        }
+        return picture.requireData()
+    }
+
+    suspend fun deletePicture() = api.deletePicture()
+
+    suspend fun signUp(request: SignUpRequest): SignUpResponse {
+        val response = api.signUp(request)
+
+        if (response.error != null)
+            throw AuthorizationException(response.error)
+
+        return response.data!!
+    }
 }

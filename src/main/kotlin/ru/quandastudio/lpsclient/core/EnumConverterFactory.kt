@@ -11,7 +11,7 @@ class EnumConverterFactory : Converter.Factory() {
         retrofit: Retrofit
     ): Converter<*, String>? =
         if (type is Class<*> && type.isEnum) {
-            Converter { enum: Any -> enum.toString().toLowerCase() }
+            Converter { enum: Any -> enum.toString() }
         } else {
             null
         }

@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "ru.quandastudio.lps"
-version = "1.0"
+version = "1.0.1"
 
 val artifactName = "lps-client"
 
@@ -18,7 +18,6 @@ dependencies {
     implementation("io.reactivex.rxjava2:rxkotlin:2.4.0")
     implementation("com.squareup.retrofit2:retrofit:2.7.1")
     implementation("com.squareup.retrofit2:converter-gson:2.7.1")
-    implementation("com.squareup.retrofit2:adapter-rxjava2:2.7.1")
     implementation(kotlin("stdlib-jdk8"))
     implementation(kotlin("reflect"))
 
