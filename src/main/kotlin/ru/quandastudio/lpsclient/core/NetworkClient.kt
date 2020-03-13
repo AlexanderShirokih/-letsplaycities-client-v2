@@ -92,11 +92,11 @@ class NetworkClient constructor(
             }
     }
 
-    fun play(isWaiting: Boolean, userId: Int?) {
+    fun play(userId: Int?) {
         sendMessage(
             LPSClientMessage.LPSPlay(
-                mode = if (isWaiting) LPSClientMessage.PlayMode.FRIEND else LPSClientMessage.PlayMode.RANDOM_PAIR,
-                oppUid = if (isWaiting) userId!! else null
+                mode = if(userId != null) LPSClientMessage.PlayMode.FRIEND else LPSClientMessage.PlayMode.RANDOM_PAIR,
+                oppUid = userId
             )
         )
     }

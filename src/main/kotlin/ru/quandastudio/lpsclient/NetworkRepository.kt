@@ -54,9 +54,14 @@ class NetworkRepository(
 
     class BannedPlayerException : Exception()
 
-    fun play(isWaiting: Boolean, friendId: Int?): Observable<ConnectionResult.ConnectedToUser> {
+    /**
+     * Sends play message to server.
+     * @param friendId if `null` game will starts in random pair mode, if [friendId] is present,
+     * game will starts in friend mode.
+     */
+    fun play(friendId: Int?): Observable<ConnectionResult.ConnectedToUser> {
         return networkClient()
-            .doOnNext { client -> client.play(isWaiting, friendId) }
+            .doOnNext { client -> client.play(friendId) }
             .flatMap {
                 inputMessage().filter { msg: LPSMessage -> msg is LPSMessage.LPSPlayMessage }
                     .cast(LPSMessage.LPSPlayMessage::class.java)
