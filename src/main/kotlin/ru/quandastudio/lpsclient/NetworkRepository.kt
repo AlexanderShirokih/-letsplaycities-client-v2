@@ -7,15 +7,16 @@ import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 import ru.quandastudio.lpsclient.core.LPSMessage
 import ru.quandastudio.lpsclient.core.NetworkClient
+import ru.quandastudio.lpsclient.model.ConnectionResult
 import ru.quandastudio.lpsclient.model.PlayerData
 import java.util.concurrent.TimeUnit
 
 class NetworkRepository(
-    private val mNetworkClient: NetworkClient,
+    private val networkClient: NetworkClient,
     private val token: Single<String>
 ) {
 
-    private fun inputMessage(): Observable<LPSMessage> = mNetworkClient.getMessages()
+    private fun inputMessage(): Observable<LPSMessage> = networkClient.getMessages()
 
     fun getWords(): Observable<LPSMessage.LPSWordMessage> =
         inputMessage().filter { it is LPSMessage.LPSWordMessage }.cast(LPSMessage.LPSWordMessage::class.java)
@@ -42,7 +43,7 @@ class NetworkRepository(
             .firstElement()
 
     private fun networkClient(): Observable<NetworkClient> =
-        Observable.just(mNetworkClient)
+        Observable.just(networkClient)
             .subscribeOn(Schedulers.io())
 
     fun login(userData: PlayerData): Observable<NetworkClient.AuthResult> {
@@ -53,7 +54,7 @@ class NetworkRepository(
 
     class BannedPlayerException : Exception()
 
-    fun play(isWaiting: Boolean, friendId: Int?): Observable<Pair<PlayerData, Boolean>> {
+    fun play(isWaiting: Boolean, friendId: Int?): Observable<ConnectionResult.ConnectedToUser> {
         return networkClient()
             .doOnNext { client -> client.play(isWaiting, friendId) }
             .flatMap {
@@ -71,23 +72,30 @@ class NetworkRepository(
                         Observable.error(err)
                 }
             }
-            .map { it.getPlayerData() to it.youStarter }
+            .map { ConnectionResult.ConnectedToUser(it.getPlayerData(), it.youStarter) }
     }
 
-    fun connectToFriend(): Maybe<Pair<PlayerData, Boolean>> {
+    fun connectToFriend(): Maybe<ConnectionResult> {
         return networkClient()
-            // What is this?
-//            .takeUntil<LPSMessage.LPSFriendModeRequest> {
-//                inputMessage().filter { it is LPSMessage.LPSFriendModeRequest }
-//            }
             .flatMap { inputMessage() }
-            .filter { it is LPSMessage.LPSPlayMessage }
-            .cast(LPSMessage.LPSPlayMessage::class.java)
-            .map { it.getPlayerData() to it.youStarter }
+            .filter { it is LPSMessage.LPSFriendModeRequest || it is LPSMessage.LPSPlayMessage }
+            .map { message ->
+                when (message) {
+                    is LPSMessage.LPSFriendModeRequest -> ConnectionResult.FriendModeRejected(
+                        message.result,
+                        message.login
+                    )
+                    is LPSMessage.LPSPlayMessage -> ConnectionResult.ConnectedToUser(
+                        message.getPlayerData(),
+                        message.youStarter
+                    )
+                    else -> throw LPSException("Unexpected message type in when() block")
+                }
+            }
             .firstElement()
     }
 
-    fun disconnect() = mNetworkClient.disconnect()
+    fun disconnect() = networkClient.disconnect()
 
     fun acceptFriendRequest(userId: Int): Observable<NetworkRepository> {
         return networkClient()

@@ -1,9 +1,27 @@
 package ru.quandastudio.lpsclient.model
 
+/**
+ * Enum that represents rejection reason
+ */
 enum class FriendModeResult {
+    /**
+     * Opponent currently in game with other player.
+     */
     BUSY,
-    OFFLINE,
+
+    /**
+     * Opponent not in a friendship with current player
+     */
     NOT_FRIEND,
-    DENIED;
+
+    /**
+     * Opponent decline game request
+     */
+    DENIED,
+
+    /**
+     * Opponent not found or banned
+     */
+    NO_USER;
 }
 
