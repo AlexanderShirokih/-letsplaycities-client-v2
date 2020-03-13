@@ -74,8 +74,12 @@ interface LpsApi {
         @Body body: RequestBody
     ): MessageWrapper<String>
 
+
     @DELETE("user/picture")
     suspend fun deletePicture()
+
+    @POST("user/token")
+    suspend fun updateToken(@Path("token") newToken: String)
 
     @POST("user/")
     suspend fun signUp(@Body request: SignUpRequest): MessageWrapper<SignUpResponse>
