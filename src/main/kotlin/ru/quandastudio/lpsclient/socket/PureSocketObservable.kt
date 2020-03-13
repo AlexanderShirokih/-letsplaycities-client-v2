@@ -25,6 +25,7 @@ class PureSocketObservable(host: String, port: Int) : SocketObservable(host, por
                     charArrayOf()
                 )
             )
+            observer?.onComplete()
         }
 
         override fun onNext(data: CharArray) {

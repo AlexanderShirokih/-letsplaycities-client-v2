@@ -53,8 +53,16 @@ class WebSocketObservable(host: String, port: Int) : SocketObservable(host, port
 
             override fun onException(e: Exception) {
                 if (isRunning) {
-                    onCloseReceived()
-                    observer.onError(e)
+                    observer.onNext(
+                        StatefulData(
+                            this@WebSocketObservable,
+                            State.DISCONNECTED,
+                            charArrayOf()
+                        )
+                    )
+                    if (!this@WebSocketObservable.isDisposed)
+                        observer.onError(e)
+                    isRunning = false
                 }
             }
 
@@ -66,6 +74,7 @@ class WebSocketObservable(host: String, port: Int) : SocketObservable(host, port
                         charArrayOf()
                     )
                 )
+                observer.onComplete()
                 isRunning = false
             }
         }.apply {
