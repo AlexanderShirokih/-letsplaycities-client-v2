@@ -59,25 +59,36 @@ class NetworkRepository(
      * @param friendId if `null` game will starts in random pair mode, if [friendId] is present,
      * game will starts in friend mode.
      */
-    fun play(friendId: Int?): Observable<ConnectionResult.ConnectedToUser> {
+    fun play(friendId: Int?): Observable<ConnectionResult> {
         return networkClient()
             .doOnNext { client -> client.play(friendId) }
-            .flatMap {
-                inputMessage().filter { msg: LPSMessage -> msg is LPSMessage.LPSPlayMessage }
-                    .cast(LPSMessage.LPSPlayMessage::class.java)
-            }
-            .flatMap {
-                if (it.banned) Observable.error(BannedPlayerException()) else Observable.just(it)
-            }
-            .retryWhen { errors ->
-                errors.flatMap { err ->
-                    if (err is BannedPlayerException)
-                        Observable.just(0L).delay((2L..5L).random(), TimeUnit.SECONDS)
-                    else
-                        Observable.error(err)
+            .flatMap { inputMessage() }
+            .filter { it is LPSMessage.LPSFriendModeRequest || it is LPSMessage.LPSPlayMessage }
+            .flatMap { message ->
+                when (message) {
+                    is LPSMessage.LPSFriendModeRequest -> Observable.just(
+                        ConnectionResult.FriendModeRejected(
+                            message.result,
+                            message.login
+                        )
+                    )
+                    is LPSMessage.LPSPlayMessage ->
+                        Observable.just(message)
+                            .flatMap {
+                                if (it.banned) Observable.error(BannedPlayerException()) else Observable.just(it)
+                            }
+                            .retryWhen { errors ->
+                                errors.flatMap { err ->
+                                    if (err is BannedPlayerException)
+                                        Observable.just(0L).delay((2L..5L).random(), TimeUnit.SECONDS)
+                                    else
+                                        Observable.error(err)
+                                }
+                            }
+                            .map { ConnectionResult.ConnectedToUser(it.getPlayerData(), it.youStarter) }
+                    else -> Observable.error(LPSException("Unexpected message type in when() block"))
                 }
             }
-            .map { ConnectionResult.ConnectedToUser(it.getPlayerData(), it.youStarter) }
     }
 
     fun connectToFriend(): Maybe<ConnectionResult> {
